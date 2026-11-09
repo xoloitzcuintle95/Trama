@@ -1,0 +1,24 @@
+# Ejemplo: selecciona tu pantalla y micrófono con el menú antes de grabar.
+schema_version = 2
+
+[recording]
+screen = ""
+output = "../recordings/{timestamp}.mkv"
+fps = 30
+game_audio = true
+microphone = "default_input"
+
+[[layers]]
+name = "Avatar de muestra"
+kind = "avatar"
+idle = "assets/idle.gif"
+talking = "assets/talking.gif"
+# Ejemplo para video 1920x1080: 300x300, margen derecho/inferior de 20 px.
+x = 1600
+y = 760
+width = 300
+height = 300
+keep_aspect = true
+visible = true
+threshold = 0.04
+release_ms = 250

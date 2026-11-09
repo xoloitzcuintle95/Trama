@@ -1,0 +1,37 @@
+Trama preliminary local build
+=============================
+This is a local evaluation package, not a public release. Trama's own code and supplied branding are licensed under GPL-3.0-only by the project owner's decision.
+The complete text is in licenses/Trama-GPL-3.0.txt. Source contributors retain
+their respective rights; no personal author/contact data is introduced here.
+The supplied branding was generated with ChatGPT and provided by the project
+owner. The icon, mascot and hero are covered by the same GPL-3.0-only license.
+No human authorship or exclusivity is claimed.
+This notice does not relicense any bundled dependency.
+
+GPU Screen Recorder
+-------------------
+Source: https://repo.dec05eba.com/gpu-screen-recorder
+Commit: f97d1e392816503282d20a0804c3ce3fd2943767
+Version: 6.1.7
+License: GPL-3.0-only
+The complete upstream license is in licenses/GSR-GPL-3.0.txt.
+Original upstream notices are preserved in the accompanying source archive.
+No GSR graphical application is included.
+
+Rust dependencies
+-----------------
+Package names, versions, license expressions and original license files are
+included in licenses/rust/. The accompanying source archive includes vendored
+sources from Cargo.lock, with their original notices. The inventory can include
+build-time and other-target dependencies, not only runtime code.
+zune-core 0.4.12 and zune-jpeg 0.4.21 declare MIT OR Apache-2.0 OR Zlib in
+Cargo.toml/source headers but omit separate license text files from their crates.
+Their original declarations/headers and the standard Apache-2.0 license text
+(from /usr/share/common-licenses/Apache-2.0) are included without inventing
+copyright holders.
+
+System libraries and tools
+--------------------------
+Shared multimedia/graphics libraries, Python, FFmpeg and PulseAudio utilities
+are dependencies supplied by the operating system; their binaries are not
+bundled in this package. Their notices remain in their respective OS packages.

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Trama
+Comment=Record your screen with overlays
+Comment[es]=Graba tu pantalla con overlays
+Exec=trama
+Icon=trama
+Terminal=true
+Categories=AudioVideo;Recorder;
+Keywords=record;screen;overlays;GSR;
+StartupNotify=false

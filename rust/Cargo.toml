@@ -1,0 +1,34 @@
+[package]
+name = "gsr-overlay-rust"
+version = "0.4.0"
+edition = "2024"
+publish = false
+license = "GPL-3.0-only"
+
+[lib]
+name = "gsr_overlay_rust"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+glow = { version = "=0.17.0", default-features = false }
+png = "=0.18.1"
+gif = { version = "=0.13.3", default-features = false, features = ["std"] }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.154"
+zune-jpeg = { version = "=0.4.21", default-features = false, features = ["std"] }
+
+[features]
+# Fault injection is compiled only into the test artifact, never the release script.
+test-hooks = []
+
+[profile.release]
+panic = "unwind"
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+undocumented_unsafe_blocks = "deny"

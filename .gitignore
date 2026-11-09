@@ -1,0 +1,36 @@
+# Local sources of the external engine and all generated build outputs.
+/third_party/gpu-screen-recorder/
+/build/
+/rust/target/
+
+# User profiles and resources belong outside the source tree.
+/*.toml
+/gifs/
+/.local/
+/recordings/
+.env
+.env.*
+
+# Captures, audio, reports and caches.
+*.mp4
+*.mkv
+*.webm
+*.mov
+*.wav
+*.flac
+*.gsr.log
+*.report.json
+*.jsonl
+*.log
+__pycache__/
+*.py[cod]
+*.so
+*.o
+*.a
+
+# Editor/agent-local state, not project source.
+/.agents/
+/.aws/
+/.codex/
+.vscode/
+.idea/

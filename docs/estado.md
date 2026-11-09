@@ -124,3 +124,28 @@ The bundle is approximately 2.4 MiB, excluding shared runtime downloads. The oth
 PC is being tested; no additional distribution or GPU is certified yet. Complete
 release sources/notices, metadata and publication checks remain pending. See the
 [Flatpak procedure](flatpak.md). No public release has been made.
+
+
+## Public distribution and compatibility direction
+
+Public packages will be Flatpak-only; the native `.deb` builder remains a
+local development tool. The revised recipe uses GSR's static FFmpeg, including
+its NVENC runtime API negotiation patch, plus upstream's i965 driver and VAAPI
+search paths. This revision is prepared, not yet capture-validated. The earlier
+Mint/XFCE/X11 test loaded the plugin but failed encoding because runtime FFmpeg
+required NVENC API 13.1 and the driver exposed 13.0. The existing test bundle
+predates this correction. See [build instructions](flatpak.md) and
+[compatibility reporting](compatibility.md). No new hardware support is certified.
+
+## Flatpak candidate and presentation
+
+The user confirmed recording with the revised static-FFmpeg build on the
+Intel/COSMIC laptop. The local release assembler preserves those binary hashes,
+adds AppStream metadata and component notices and produces a separate module/
+Cargo source archive and checksums. It does not install or publish. Exact SDK
+glibc sources/patch and helper relinking review, real public URLs and host-helper
+checks remain publication blockers; see [candidate assembly](flatpak.md#release-candidate-assembly).
+A compatibility issue template is prepared in `.github/ISSUE_TEMPLATE/`.
+Suggested presentation: retain the illustrated hero, add one short real TUI
+workflow GIF, and use a separate optional recording clip to demonstrate overlays.
+Review screen content, filenames and audio for personal data before publication.

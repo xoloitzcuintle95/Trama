@@ -28,3 +28,13 @@ Terms consulted: [OpenAI, content ownership](https://openai.com/policies/terms-o
 Between the user and OpenAI, those terms assign output to the user to the extent
 permitted by law, and warn that it may not be unique. Choosing GPL-3.0-only for
 these files is the user's decision, not a license imposed by OpenAI.
+
+
+## Website and release media
+
+The hero is an illustration, not a live preview. A short real TUI recording can
+show selecting a layer, moving it between corners and starting a test. A separate
+screen-recording clip can demonstrate animated overlays and audio in context;
+it is not a benchmark or proof of compatibility with other hardware. Review
+terminal paths, profile/device names, screen content and audio before publication.
+The application does not ship personal demonstration profiles or recordings.

@@ -1,5 +1,9 @@
 # Trama preliminary package
 
+**Development-only packaging:** the public release plan is Flatpak only. This
+recipe is retained for local development and historical test reproduction, not
+as a public download method.
+
 Status: local evaluation for **Pop!_OS 24.04 / amd64 / Wayland-COSMIC**.
 This is not a stable release or a promise of compatibility with other distributions.
 Application version is `0.1.0~alpha1`; the plugin retains 0.4.0 because these

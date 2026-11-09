@@ -1,7 +1,7 @@
 # Working on this project
 
 ## Goal
-Build a lightweight compositor on GPU Screen Recorder (GSR). Prioritize screen recording with good performance and synchronized audio on Linux. Current foundation: PNG/JPG/GIF layers, microphone-reactive avatar, TOML profiles and TUI. The application is Trama; its visual identity is in assets/brand/. Vision/stages: [docs/plan-rust.md](docs/plan-rust.md). Streaming remains out of scope; the local preliminary package is documented in [docs/paquete-preliminar.md](docs/paquete-preliminar.md).
+Build a lightweight compositor on GPU Screen Recorder (GSR). Prioritize screen recording with good performance and synchronized audio on Linux. Current foundation: PNG/JPG/GIF layers, microphone-reactive avatar, TOML profiles and TUI. The application is Trama; its visual identity is in assets/brand/. Vision/stages: [docs/plan-rust.md](docs/plan-rust.md). Streaming remains out of scope; public distribution targets Flatpak ([docs/flatpak.md](docs/flatpak.md)); the native .deb recipe is development-only.
 
 It must use fewer resources than OBS with an equivalent scene/quality. The previously mentioned 150 MB is an unmeasured aspiration, not a result or validated limit.
 

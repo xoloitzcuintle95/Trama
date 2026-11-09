@@ -20,7 +20,8 @@
     "--share=ipc",
     "--socket=pulseaudio",
     "--socket=wayland",
-    "--talk-name=org.freedesktop.Flatpak"
+    "--talk-name=org.freedesktop.Flatpak",
+    "--env=LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri:/usr/lib/x86_64-linux-gnu/dri/intel-vaapi-driver:/usr/lib/x86_64-linux-gnu/dri/nvidia-vaapi-driver:/usr/lib/x86_64-linux-gnu/GL/lib/dri:/app/lib/dri"
   ],
   "modules": [
     {
@@ -55,6 +56,26 @@
       ]
     },
     {
+      "name": "intel-vaapi-driver",
+      "only-arches": [
+        "x86_64"
+      ],
+      "buildsystem": "meson",
+      "config-opts": [
+        "--buildtype=release",
+        "-Ddriverdir=/app/lib/dri",
+        "-Dwith_x11=no",
+        "-Dwith_wayland_drm=no"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/irql-notlessorequal/intel-vaapi-driver/archive/refs/tags/2.4.5.tar.gz",
+          "sha256": "f89f77bc46ec6f46392c1b90b9bf34d09f908bf33c9d16d385897b1fe282bacc"
+        }
+      ]
+    },
+    {
       "name": "kms-server-proxy",
       "buildsystem": "simple",
       "build-commands": [
@@ -72,7 +93,7 @@
       "buildsystem": "simple",
       "build-commands": [
         "python3 adapt-app-id.py --require-match",
-        "meson setup build --prefix=/app --buildtype=release -Dstrip=false -Dcapabilities=false -Dsystemd=false -Dnvidia_suspend_fix=false -Dffmpeg_static=false -Dportal=false -Dapp_audio=false -Dplugin_examples=false",
+        "meson setup build --prefix=/app --buildtype=release -Dstrip=false -Dcapabilities=false -Dsystemd=false -Dnvidia_suspend_fix=false -Dffmpeg_static=true -Dportal=false -Dapp_audio=false -Dplugin_examples=false",
         "meson compile -C build",
         "install -Dm755 build/gpu-screen-recorder /app/bin/gpu-screen-recorder",
         "gcc kms/server/kms_server.c -o /app/bin/gsr-kms-server /app/lib/libdrm.a -I/app/include/libdrm -fstack-protector-all -O3 -s -flto -Wall -Wextra -Werror -DNDEBUG -static -static-libgcc -fno-link-libatomic",
@@ -89,6 +110,55 @@
         {
           "type": "file",
           "path": "adapt-app-id.py"
+        },
+        {
+          "type": "file",
+          "url": "https://ffmpeg.org/releases/ffmpeg-9.0.tar.xz",
+          "sha256": "7f607a00dd0d28a729d5a4811205812eef01cf6ef6155025febb6f36a9062d52",
+          "dest": "subprojects/packagecache",
+          "dest-filename": "ffmpeg-9.0.tar.xz"
+        },
+        {
+          "type": "file",
+          "url": "https://downloads.sourceforge.net/project/lame/lame/4.0/lame-4.0.tar.gz",
+          "sha256": "3df5124d5ad3a98312ffd7ba6a9b36230e4f8a3e66d3ce0f425e336c32d216eb",
+          "dest": "subprojects/packagecache",
+          "dest-filename": "lame-4.0.tar.gz"
+        },
+        {
+          "type": "file",
+          "url": "https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-3.6.7/mbedtls-3.6.7.tar.bz2",
+          "sha256": "a7e8bcbec0e6f761b4af24f25677626b35f762f68eef79c08677a363212d11f6",
+          "dest": "subprojects/packagecache",
+          "dest-filename": "mbedtls-3.6.7.tar.bz2"
+        },
+        {
+          "type": "file",
+          "url": "https://github.com/FFmpeg/nv-codec-headers/archive/refs/tags/n13.0.19.0.tar.gz",
+          "sha256": "86d15d1a7c0ac73a0eafdfc57bebfeba7da8264595bf531cf4d8db1c22940116",
+          "dest": "subprojects/packagecache",
+          "dest-filename": "nv-codec-headers-13.0.19.0.tar.gz"
+        },
+        {
+          "type": "file",
+          "url": "https://downloads.xiph.org/releases/opus/opus-1.6.1.tar.gz",
+          "sha256": "6ffcb593207be92584df15b32466ed64bbec99109f007c82205f0194572411a1",
+          "dest": "subprojects/packagecache",
+          "dest-filename": "opus-1.6.1.tar.gz"
+        },
+        {
+          "type": "file",
+          "url": "https://github.com/Haivision/srt/archive/refs/tags/v1.5.6.tar.gz",
+          "sha256": "2c4980c2c4cfd142d21b829d939dc51db9c6628af5967fff62fd7290769569c7",
+          "dest": "subprojects/packagecache",
+          "dest-filename": "srt-1.5.6.tar.gz"
+        },
+        {
+          "type": "file",
+          "url": "https://code.videolan.org/videolan/x264/-/archive/b35605ace3ddf7c1a5d67a2eb553f034aef41d55/x264-b35605ace3ddf7c1a5d67a2eb553f034aef41d55.tar.bz2",
+          "sha256": "6eeb82934e69fd51e043bd8c5b0d152839638d1ce7aa4eea65a3fedcf83ff224",
+          "dest": "subprojects/packagecache",
+          "dest-filename": "x264-b35605ace3ddf7c1a5d67a2eb553f034aef41d55.tar.bz2"
         }
       ]
     },

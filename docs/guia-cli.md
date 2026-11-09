@@ -1,6 +1,7 @@
 # GSR compositor CLI user guide
 
-> To install the evaluation package, see [Preliminary package](paquete-preliminar.md).
+> Public distribution targets Flatpak: see [installation](flatpak.md).
+> The [native preliminary package](paquete-preliminar.md) is development-only.
 > This manual retains development/source-checkout paths and commands. The
 > packaged installation includes its own GSR engine and starts with `trama`.
 

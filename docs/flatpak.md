@@ -2,8 +2,8 @@
 
 Local ID: `io.github.xoloitzcuintle95.Trama`, branch `experimental`, x86_64.
 Target: Wayland, GPU H.264, SDR and MKV. No GSR GUI, X11 permission, streaming
-or network permission. The native `.deb`, Rust compositor and TOML schema are
-unchanged. This is a local test build, not a public release. User-confirmed recording
+or network permission. Public distribution will be Flatpak-only; the native `.deb` recipe remains for
+development. The Rust compositor and TOML schema are unchanged. This is a local test build, not a public release. User-confirmed recording
 works on the Pop!_OS/COSMIC laptop; other systems remain unvalidated.
 
 ## Current authorization design
@@ -26,8 +26,10 @@ as root. The helper still runs privileged for the capture session.
 GSR source remains pinned to `f97d1e392816503282d20a0804c3ce3fd2943767`.
 The packaging adaptation replaces its upstream Flatpak app ID and fails when
 the expected identifier disappears. It never changes the original checkout or
-capture/encoder code. The engine links runtime FFmpeg; compatibility with older
-NVIDIA drivers needing upstream FFmpeg patches is not claimed.
+capture/encoder code. The revised recipe builds upstream static FFmpeg with its NVENC runtime API
+negotiation patch. That revision has not yet been built or capture-tested; the
+previous user-tested bundle still links runtime FFmpeg. No NVIDIA compatibility
+claim is made from recipe checks alone.
 
 ## Permissions and existing profiles
 
@@ -110,7 +112,11 @@ Seven local recipe tests pass: fixed target, literal argument forwarding, invali
 input rejection, icon dimensions, source adaptation and an offline Cargo snapshot.
 Manifest parsing also passes. No privileged commands were executed by the agent.
 Host ownership/capability verification and helper-process cleanup remain pending.
-Testing on the other physical PC is in progress; no result is claimed yet.
+The second physical PC runs Linux Mint/XFCE on X11. With a temporary
+`--socket=x11` launch permission, the user confirmed that the TUI opens. GSR
+enumerated the selected monitor and loaded/unloaded the Rust plugin, but capture
+failed during encoder initialization: runtime FFmpeg required NVENC API 13.1,
+while the NVIDIA driver exposed 13.0. No successful X11 capture is claimed.
 
 Before distribution: complete authorization/capture/stop tests; review broad
 permissions and desktop launch; audit transitive licenses/notices; provide
@@ -135,3 +141,116 @@ cleanup have not yet been verified. A local test bundle was generated in
 `build/packages/trama-flatpak-test-x86_64.flatpak` with a companion SHA-256 file.
 It is for private second-machine testing, not a published release; the complete
 release sources/notices and remaining distribution checks are still pending.
+
+## NVIDIA compatibility investigation (2026-11-09)
+
+The Mint log reports `Driver does not support the required nvenc API version.
+Required: 13.1 Found: 13.0`, followed by failure to open the video codec. The
+invalid MKV/ffprobe error is a consequence of encoder initialization failing,
+not evidence of a separate container bug. The test had no layers or microphone.
+The GPU model and exact driver version were not collected.
+
+The previously tested recipe used `-Dffmpeg_static=false`, linking the runtime's FFmpeg. The
+[upstream Flatpak recipe](https://github.com/flathub/com.dec05eba.gpu_screen_recorder/blob/master/com.dec05eba.gpu_screen_recorder.yml)
+instead uses `-Dffmpeg_static=true` and supplies pinned FFmpeg 9.0 sources and
+`nv-codec-headers` n13.0.19.0. The pinned GSR source's
+`subprojects/nv-codec-headers.wrap`, `subprojects/packagefiles/ffmpeg/meson.build`
+and `extra/build_ffmpeg.sh` confirm that it builds those headers before FFmpeg.
+The FFmpeg wrap also applies `ffmpeg-nvenc-runtime-api-version.patch`: inspection
+confirms runtime API negotiation tables. Earlier investigation missed that patch;
+headers alone do not describe the complete upstream compatibility mechanism.
+
+Implemented in the recipe, pending a real build: use GSR's existing static FFmpeg build with
+the upstream-pinned source inputs, preserving our authorization launcher and
+disabled portal/app-audio options. Audit the resulting dependency notices,
+corresponding sources, binary size and encoder linkage. Compiling only GSR
+against older headers would not change runtime libavcodec's NVENC requirement;
+lowering a reported version without a compatible build is not a solution.
+
+This should address the observed API-version mismatch, but requires a rebuilt
+package and real NVIDIA retest before claiming compatibility. Intel/Wayland
+recording must also be checked for regression. X11 remains unvalidated and is
+not enabled by default. No driver update is requested, and the existing
+test bundle remains unchanged; rebuild from a fresh snapshot to use this recipe.
+
+
+## Broader compatibility recipe (not yet capture-validated)
+
+The next snapshot uses the pinned GSR static FFmpeg build and its original
+patches, with all seven source archives explicitly hash-pinned in the manifest.
+The installer rejects a GSR binary that still depends on runtime libavcodec,
+libavformat, libavfilter, libavutil or libswresample. The build manifest records
+the FFmpeg/header choice. Runtime ffprobe remains the file-inspection tool.
+
+The recipe also includes the upstream-selected maintained i965 VAAPI driver for
+older Intel hardware and the x86_64 VAAPI search paths from upstream. Modern
+Intel/AMD/NVIDIA graphics integration still depends on the Flatpak runtime and
+host drivers. Bundling i965 does not add hardware encoder capabilities to a GPU.
+No X11 permission or new capture mode is enabled by this change.
+
+Prepare a new snapshot (do not rebuild v3 expecting these changes):
+
+```bash
+python3 scripts/prepare-flatpak.py --output build/flatpak-input-v4
+flatpak-builder --arch=x86_64 --state-dir=build/flatpak-state --force-clean --repo=build/flatpak-repo build/flatpak-app build/flatpak-input-v4/io.github.xoloitzcuintle95.Trama.json
+```
+
+If v4 already exists, choose a fresh output suffix and use it in both commands.
+The static build may increase build time and package size; neither the final
+size nor NVIDIA success is known before building/testing. Keep corresponding
+sources for all dependencies and review their licenses before public release.
+See [compatibility and issue reporting](compatibility.md).
+
+
+Local validation of this revision: eight recipe tests pass, including source
+hash/URL agreement with the pinned upstream wraps and the v4 snapshot matching
+the current manifest. Manifest parsing and `git diff --check` pass. The attempted
+build stopped during source download because this environment could not resolve
+`gitlab.freedesktop.org`; compilation and the linkage guard have not run yet.
+
+## Release-candidate assembly
+
+The revised static-FFmpeg Flatpak was built by the user and the user confirmed
+recording on the Intel/COSMIC/Wayland laptop. NVIDIA/X11 recording remains
+unverified. The local release assembler adds metadata and dependency notices
+without rebuilding the tested engine/helper/plugin/checker, and checks their
+hashes before and after staging. It removes libdrm build-only headers/archives.
+
+```bash
+python3 scripts/release-flatpak.py
+```
+
+The default input is `build/flatpak-app-v4` with its matching v4 source snapshot.
+Output is `build/releases/0.1.0-alpha1/`; an existing output is never overwritten.
+Use `--build`, `--snapshot` and `--output` for other explicit locations. No sudo,
+installation, capability grants or publication are performed. Icon export
+validation runs without a sandbox because this environment cannot run bwrap;
+the locally generated icon and metadata have separate validation checks.
+
+Files to retain together:
+
+- `trama-0.1.0-alpha1-x86_64.flatpak`: local binary candidate.
+- `trama-0.1.0-alpha1-x86_64-sources.tar.xz`: matching Trama/Cargo snapshot,
+  verified module archives, offline source recipe, patches and rebuild instructions.
+- `RELEASE-INFO.json`: source inventory, build hashes/commits and publication blockers.
+- `trama-0.1.0-alpha1-x86_64.sha256`: checksums for all three files.
+
+```bash
+cd build/releases/0.1.0-alpha1
+sha256sum -c trama-0.1.0-alpha1-x86_64.sha256
+```
+
+The metadata describes `0.1.0-alpha1` as a development release. Code and art remain
+GPL-3.0-only; the new AppStream metadata document alone uses CC0-1.0. No public
+URLs are invented. `appstreamcli validate --no-net` reports a missing-homepage
+warning until a real public URL is supplied; this is not a completed Flathub
+submission. Rust notices, FFmpeg and its codec/network dependencies, libdrm,
+i965 and applicable SDK notices are retained with a source/notice inventory.
+
+**Publication remains blocked** on exact SDK glibc sources/patch and helper
+relinking review, real public metadata URLs, host-helper checks and validation of
+the final metadata/notices candidate. The source archive explicitly records the
+SDK-source gap rather than describing its SDK manifest as full corresponding
+source. No source archive or checksum alone proves license compliance. The
+assembler does not change the installed application or the earlier private test
+bundle; do not accidentally upload that earlier bundle as this candidate.

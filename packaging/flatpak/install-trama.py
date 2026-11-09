@@ -4,9 +4,15 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import subprocess
+import re
 from build_icon import install_icon
 
 root = Path('/app/lib/trama')
+# A runtime FFmpeg would silently undo the NVENC compatibility build choice.
+linkage = subprocess.check_output(['readelf', '-d', '/app/bin/gpu-screen-recorder'], text=True)
+if re.search(r'\(NEEDED\).*\[lib(?:avcodec|avformat|avfilter|avutil|swresample)\.', linkage):
+    raise SystemExit('GSR still links runtime FFmpeg; review ffmpeg_static before packaging')
 def copy(source, destination, mode=0o644):
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source, destination)
@@ -30,6 +36,8 @@ manifest = {
     'cargo_lock_sha256': sha('rust/Cargo.lock'),
     'header_sha256': sha('/app/share/trama/plugin.h'),
     'packaging': 'flatpak-local-experimental',
+    'ffmpeg': '9.0-static-upstream-nvenc-runtime-negotiation',
+    'nv_codec_headers': '13.0.19.0',
 }
 (root/'build/overlay-rust.build.json').write_text(json.dumps(manifest, indent=2)+'\n')
 launcher = Path('/app/bin/trama')
@@ -45,4 +53,6 @@ for path in Path('examples').rglob('*'):
     if path.is_file():
         copy(path, Path('/app/share/trama/examples')/path.relative_to('examples'))
 copy('LICENSE', Path('/app/share/licenses/trama/LICENSE'))
-copy('packaging/copyright', Path('/app/share/licenses/trama/copyright'))
+copy('packaging/flatpak/NOTICE', Path('/app/share/licenses/trama/copyright'))
+copy('packaging/flatpak/io.github.xoloitzcuintle95.Trama.metainfo.xml',
+     Path('/app/share/metainfo/io.github.xoloitzcuintle95.Trama.metainfo.xml'))

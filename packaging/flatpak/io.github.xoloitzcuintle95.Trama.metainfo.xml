@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.xoloitzcuintle95.Trama</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-only</project_license>
+  <name>Trama</name>
+  <summary>Record your screen with overlays from the terminal</summary>
+  <summary xml:lang="es">Graba tu pantalla con overlays desde la terminal</summary>
+  <description>
+    <p>Trama is a terminal screen recorder and compositor for Linux, powered by GPU Screen Recorder.</p>
+    <p>Arrange PNG, JPG and animated GIF layers, configure a microphone-reactive avatar, and save reusable TOML profiles.</p>
+    <p>Record system audio and microphone to MKV with GPU-encoded H.264 video. The capture engine is included.</p>
+    <p>This experimental release targets Wayland on x86_64. Recording has been tested on Pop!_OS with COSMIC and Intel Iris Xe. Other systems may work but are not yet verified. Compatible GPU encoding and system authorization are required.</p>
+  </description>
+  <launchable type="desktop-id">io.github.xoloitzcuintle95.Trama.desktop</launchable>
+  <developer id="io.github.xoloitzcuintle95"><name>Trama contributors</name></developer>
+  <categories><category>AudioVideo</category><category>Recorder</category></categories>
+  <keywords><keyword>screen recording</keyword><keyword>overlays</keyword><keyword>terminal</keyword></keywords>
+  <content_rating type="oars-1.1"/>
+  <supports><control>keyboard</control></supports>
+  <releases>
+    <release version="0.1.0-alpha1" date="2026-11-09" type="development">
+      <description><p>Initial experimental Flatpak with overlays, microphone-reactive avatar and reusable profiles.</p></description>
+    </release>
+  </releases>
+</component>

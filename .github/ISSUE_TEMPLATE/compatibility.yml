@@ -1,0 +1,41 @@
+name: Compatibility or recording problem
+description: Report a setup where Trama does not work, or a recording failure.
+title: "[Compatibility] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Trama. Support is experimental; a fix or response time is not guaranteed.
+        Do not attach personal profiles, recordings or full unreviewed logs. Logs/reports can contain usernames, paths and device names: redact them first.
+  - type: input
+    id: version
+    attributes:
+      label: Trama version and package
+      description: Release version or exact Flatpak filename; system install or source build.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Distribution, desktop and session
+      description: Include distribution version, desktop, Wayland or X11, and physical machine or VM.
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU and driver
+      description: GPU model and driver version if known. Do not include serial numbers or a full system dump.
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps and result
+      description: What did you do, what did you expect, and what happened? Did an empty scene or 30-second test work? Was system or microphone audio enabled?
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Relevant error excerpt
+      description: Copy only relevant, redacted lines from the TUI, .gsr.log or .report.json. Review them before posting.
+      render: text

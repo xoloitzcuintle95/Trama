@@ -1,5 +1,9 @@
 # Trama publication checklist
 
+Distribution decision: Flatpak only for the public release. The `.deb` recipe
+remains development-only. Broad compatibility is a goal, not a certified hardware
+list; user reports will guide expansion.
+
 Goal: publish an early beta with verified installation/core workflow, explicit
 limits and no personal data. This does not require certifying every distribution
 or adding features, and is not publication authorization.
@@ -30,8 +34,9 @@ installation remains to be checked. Current version is still `0.1.0~alpha1`.
 - [x] Replaced the persistent privileged proxy with per-session Polkit authorization.
 - [x] Generated a private second-machine test bundle and its SHA-256 checksum.
 - [ ] Verify host deployment ownership/capabilities and helper exit after stopping.
-- [ ] Finish the second-PC test; record session, distro, GPU and actual results.
-- [ ] Prepare complete corresponding release sources/notices for Flatpak dependencies.
+- [x] Second-PC result: Mint/XFCE/X11 opens and loads the plugin; runtime NVENC 13.1 requirement rejects driver API 13.0. Capture failed; GPU model/driver version not collected.
+- [x] Prepare module/Cargo source archive and dependency notices, with SDK provenance.
+- [ ] Complete exact SDK glibc sources/patch and static-helper relinking review before publication.
 - [ ] Add final AppStream metadata and review broad permissions before public distribution.
 
 The private test bundle is not yet a public release. Installation must be system-wide
@@ -70,50 +75,27 @@ session and GPU model are sufficient for the report.
 
 - [ ] Record Mint/Ubuntu version, desktop and actual session type.
 - [ ] Record GPU and physical-machine versus VM environment.
-- [ ] Confirm `x86_64` architecture for the `amd64` package.
+- [ ] Confirm `x86_64` architecture for the Flatpak.
 
-## 3. Clean installation before labeling the package beta
+## 3. Clean Flatpak installation before release
 
-Use a fresh user or machine/VM without compilers or GSR installed to expose
-accidental dependencies on the development machine. Do not delete existing
-profiles to simulate a new user.
+A second physical capture setup is useful but is not a requirement for an
+explicitly experimental release. Test the final build on the available target;
+record other environments as unvalidated rather than inferring support.
 
-- [ ] Copy `.deb`, source archive and `.sha256` from the same build.
-- [ ] Verify hashes; retain the result and package version.
-- [ ] Inspect APT simulation before installing.
-- [ ] Install only the package and declared dependencies, without compiling.
-- [ ] `trama --help` works outside the project directory.
-- [ ] `trama` starts without sudo or another GSR in PATH.
-- [ ] Application-menu entry opens a usable terminal with the icon.
-- [ ] Record KMS authorization: Polkit or manually granted capability.
-- [ ] If testing `setcap`, apply only to the private helper and record the result.
+- [x] User built the revised static FFmpeg/i965 recipe; ELF dependency inspection confirms no runtime FFmpeg linkage.
+- [x] User confirmed the revised Flatpak works on the Intel/COSMIC/Wayland laptop; detailed final-candidate checks remain below.
+- [ ] Measure final artifact size; retain corresponding sources and dependency notices.
+- [ ] Copy the final `.flatpak` bundle and checksum to a clean environment when available.
+- [ ] Verify the hash and install system-wide with the required runtime.
+- [ ] Start outside the project directory without a separately installed GSR.
+- [ ] Verify application-menu terminal launch, icon and first-run setup.
+- [ ] Verify Polkit cancellation/retry, helper exit and removal preserving user data.
+- [ ] Record NVIDIA retest when a machine is available; do not claim it passed now.
 
-From the folder containing all three files:
-
-```bash
-sha256sum -c trama_0.1.0~alpha1_amd64.sha256
-dpkg-deb --field trama_0.1.0~alpha1_amd64.deb Version Architecture Depends
-apt-get --simulate install './trama_0.1.0~alpha1_amd64.deb'
-```
-
-Installation below **requires sudo**; these documents do not execute it:
-
-```bash
-sudo apt install './trama_0.1.0~alpha1_amd64.deb'
-```
-
-Do not force broken dependencies or replace system libraries to make the package
-fit. It requires, among others, libc6 >= 2.39 and `libavcodec60`: using APT does
-not establish binary compatibility. Ubuntu 24.04 provides those library families,
-but compatibility remains unclaimed until tested.
-[Ubuntu 24.04 libc6](https://packages.ubuntu.com/noble/libc6),
-[Ubuntu 24.04 libavcodec60](https://packages.ubuntu.com/noble/libavcodec60).
-
-Retain APT errors as packaging results. Successful installation without an
-available H.264 GPU encoder is a hardware/driver/environment limitation; there
-is no automatic CPU fallback. A VM's accelerated 3D desktop does not establish
-GPU video encoding. This distinction follows the [actual recording command](../scripts/compositor.py),
-which requires `-encoder gpu -fallback-cpu-encoding no`.
+Installation/build commands and the system-install requirement are documented in
+[the Flatpak guide](flatpak.md). The native APT recipe is retained separately in
+[development-only packaging](paquete-preliminar.md).
 
 ## 4. New-user workflow on a physical PC
 
@@ -130,10 +112,8 @@ which requires `-encoder gpu -fallback-cpu-encoding no`.
 - [ ] Stop with `x` or Ctrl+C: finalized file, TUI return and usable terminal.
 - [ ] Record again in the same session without overwriting previous output.
 
-Installed samples are in `/usr/share/doc/trama/examples/`. To use them, **copy the
-entire folder** to an owned, writable location first, retaining `assets/`. Do not
-record into `/usr/share`. KMS permissions/diagnostic commands are in the
-[package guide](paquete-preliminar.md).
+Flatpak samples are in `/app/share/trama/examples/` inside the sandbox. To use them, **copy the
+entire folder** to an owned, writable location first, retaining `assets/`. Do not record into `/app`. Authorization and copy commands are in the [Flatpak guide](flatpak.md).
 
 ## 5. Errors and coexistence
 
@@ -170,10 +150,11 @@ those of the physical laptop.
 - [ ] Update compatibility with actual results and known failures.
 - [ ] Review final documentation/code before the next commit.
 - [ ] Recheck source privacy and author/committer metadata before uploading.
-- [ ] Build final versioned package, corresponding sources, notices and hashes.
+- [x] Assemble a local versioned Flatpak candidate, module sources, notices and hashes.
+- [ ] Close the SDK-source and metadata-URL blockers before calling it final.
 - [ ] Test **that same final package**; do not replace binaries after hashing.
 - [ ] Create a remote/publish only with user authorization.
-- [ ] Mark release preliminary and attach `.deb`, sources and hashes.
+- [ ] Mark release preliminary and attach the `.flatpak`, corresponding sources and hashes.
 - [ ] Include installation, KMS helper, removal and bug-report instructions.
 
 Trama's Git must not contain `build/`, GSR checkout, personal profiles, captures

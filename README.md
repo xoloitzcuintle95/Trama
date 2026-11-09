@@ -7,7 +7,9 @@ and GPU video encoding.
 ![Trama: screen capture, audio and overlays in one recording](assets/brand/hero.png)
 
 **Early release.** Tested on Pop!_OS 24.04 with COSMIC/Wayland and Intel Iris Xe.
-Other hardware and distributions have not yet been validated.
+Other hardware and distributions are not yet validated. GPU H.264 encoding is
+required; there is no CPU fallback. If your setup fails, please report it using
+the [compatibility report guide](docs/compatibility.md).
 
 ## Features
 
@@ -21,14 +23,15 @@ the scope of this version.
 
 ## Getting started
 
-The `.deb` package includes the capture engine, so you do not need to install GSR separately.
-It is still being evaluated locally; no public download is available yet.
+Flatpak is the planned public distribution format (Linux x86_64). The package
+includes the capture engine; no separate GSR installation is needed. The current
+build is experimental and has no public download or Flathub listing yet.
 
-If you already have the package, run these commands from the folder containing it:
+See [Flatpak installation and testing](docs/flatpak.md). Once installed system-wide,
+start it from a terminal:
 
 ```bash
-sudo apt install './trama_0.1.0~alpha1_amd64.deb'
-trama
+flatpak run io.github.xoloitzcuintle95.Trama
 ```
 
 The setup wizard lets you choose a display and microphone, load the avatar GIFs,
@@ -37,7 +40,7 @@ wizard and configure a scene without an avatar.
 
 After setup, **r** records, **x** or **Ctrl+C** stops, **o** shows the video path
 and **?** opens help. Run Trama without sudo; GSR may request authorization to
-capture the screen. [Installation and KMS permissions](docs/paquete-preliminar.md).
+capture the screen. [Installation and authorization](docs/flatpak.md).
 
 ## Documentation
 

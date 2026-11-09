@@ -25,11 +25,12 @@ class RecipeTests(unittest.TestCase):
         self.assertNotIn('--socket=x11', manifest['finish-args'])
         self.assertNotIn('--share=network', manifest['finish-args'])
         self.assertEqual([m['name'] for m in manifest['modules']],
-                         ['libdrm-static','kms-server-proxy','gpu-screen-recorder','trama'])
-        proxy = manifest['modules'][1]
+                         ['libdrm-static','intel-vaapi-driver','kms-server-proxy','gpu-screen-recorder','trama'])
+        proxy = next(m for m in manifest['modules'] if m['name']=='kms-server-proxy')
         self.assertEqual(proxy['sources'], [{'type':'file','path':'launch-kms.sh'}])
         self.assertEqual(proxy['build-commands'], ['install -Dm755 launch-kms.sh /app/bin/kms-server-proxy'])
-        engine = manifest['modules'][2]
+        engine = next(m for m in manifest['modules'] if m['name']=='gpu-screen-recorder')
+        self.assertIn('-Dffmpeg_static=true', engine['build-commands'][1])
         self.assertIn('f97d1e3', engine['sources'][0]['url'])
         self.assertIn('-Dcapabilities=false', engine['build-commands'][1])
         self.assertIn('--require-match', engine['build-commands'][0])
@@ -39,15 +40,40 @@ class RecipeTests(unittest.TestCase):
         for module in manifest['modules']:
             for source in module['sources']:
                 if source['type'] == 'archive':
-                    self.assertEqual(len(source['sha512']),128)
+                    self.assertTrue(len(source.get('sha512',''))==128 or len(source.get('sha256',''))==64)
+                if 'url' in source and source['type'] == 'file':
+                    self.assertEqual(len(source['sha256']),64)
                 if source['type'] == 'git':
                     self.assertEqual(len(source['commit']),40)
 
+    def test_static_ffmpeg_inputs_match_pinned_engine_wraps(self):
+        import configparser
+        engine_source = ROOT/'third_party/gpu-screen-recorder'
+        if not engine_source.exists():
+            self.skipTest('optional pinned upstream checkout absent')
+        manifest = json.loads((ROOT/'packaging/flatpak/io.github.xoloitzcuintle95.Trama.json').read_text())
+        engine = next(m for m in manifest['modules'] if m['name']=='gpu-screen-recorder')
+        files = {s['dest-filename']:s for s in engine['sources'] if 'dest-filename' in s}
+        self.assertEqual(len(files),7)
+        for name in ('ffmpeg','nv-codec-headers','x264','opus','lame','mbedtls','srt'):
+            wrap = configparser.ConfigParser()
+            wrap.read(engine_source/'subprojects'/f'{name}.wrap')
+            source = wrap['wrap-file']
+            packaged = files[source['source_filename']]
+            self.assertEqual(packaged['url'],source['source_url'])
+            self.assertEqual(packaged['sha256'],source['source_hash'])
+            self.assertEqual(packaged['dest'],'subprojects/packagecache')
+        self.assertIn('ffmpeg-nvenc-runtime-api-version.patch',
+                      (engine_source/'subprojects/ffmpeg.wrap').read_text())
+
     def test_generated_snapshot_is_self_contained(self):
-        folder = ROOT/'build/flatpak-input-v3'
+        folder = ROOT/'build/flatpak-input-v4'
         if not folder.exists():
             self.skipTest('run source preparation first')
         manifest = json.loads((folder/'io.github.xoloitzcuintle95.Trama.json').read_text())
+        expected = json.loads((ROOT/'packaging/flatpak/io.github.xoloitzcuintle95.Trama.json').read_text())
+        expected['modules'][-1]['sources'] = [{'type':'dir','path':'trama-source'}]
+        self.assertEqual(manifest,expected)
         for module in manifest['modules']:
             for source in module['sources']:
                 if 'path' in source:

@@ -1,0 +1,33 @@
+Trama experimental Flatpak
+=========================
+Trama code and supplied artwork: GPL-3.0-only. See trama/LICENSE.
+The supplied icon, mascot and hero were generated with ChatGPT and provided by
+the project owner. No human authorship or exclusivity is claimed.
+The new AppStream metadata document alone is CC0-1.0; this does not change the
+license of the application, artwork or dependencies.
+
+GPU Screen Recorder 6.1.7: GPL-3.0-only, commit
+f97d1e392816503282d20a0804c3ce3fd2943767. See gsr/LICENSE.
+https://git.dec05eba.com/gpu-screen-recorder/
+Packaging replaces the upstream Flatpak ID and uses an unprivileged launcher
+for per-session Polkit authorization. No GSR graphical application is included.
+
+FFmpeg 9.0 is built statically using GSR's build scripts, configuration and
+original patches (NVENC runtime negotiation and mbedTLS default CA certificates).
+The enabled GPL/version3 configuration is governed by GPL version 3 or later;
+component-specific notices and exceptions remain in the source. See ffmpeg/.
+It links x264, Opus, LAME, mbedTLS and SRT, with their original notices retained.
+NV codec headers are a build input, not an NVIDIA driver bundled with Trama.
+libdrm is linked into the KMS helper. The i965 VAAPI driver is also bundled.
+See the component notice folders and the companion source archive for original
+licenses, copyright statements, patches and build instructions.
+
+Rust dependency license declarations and original license/notice files are in
+rust/. The inventory includes vendored build-time/other-target dependencies.
+zune-core and zune-jpeg omit standalone license files; their manifest and source
+header declarations are retained together with the Apache-2.0 license text.
+
+The Flatpak runtime and graphics extensions supply shared libraries/tools and
+retain their own licenses. The static helper also contains SDK libc/libgcc code;
+see sdk/ and the source archive's SDK provenance and outstanding source checklist.
+Do not describe this package as wholly GPL code or as a strong security sandbox.

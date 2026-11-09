@@ -1,92 +1,91 @@
-# Trama: TUI del compositor GSR
+# Trama: GSR compositor TUI
 
-Interfaz de pantalla completa para editar antes de grabar. Reutiliza el perfil
-TOML, el plugin Rust 0.4.0 y la grabación GSR existentes. No añade previsualización,
-edición en vivo ni empaquetado. No requiere nuevas dependencias de pip: usa
-`curses` de Python, disponible en el entorno revisado.
+A full-screen interface for editing before recording. It reuses existing TOML
+profiles, Rust plugin 0.4.0 and GSR recording. This interface adds no preview,
+live editing or packaging of its own. No additional pip dependencies are needed:
+it uses Python's `curses`, available in the reviewed environment.
 
-## Abrir tu perfil
+## Open your profile
 
-Desde una terminal de COSMIC, sin sudo:
+From a COSMIC terminal, without sudo:
 
 ```bash
 cd "$HOME/project-gsr-compositor"
 ./trama perfil.toml
 ```
 
-Para poder escribir solo `trama` en esa shell, sin instalar nada:
+To type just `trama` in that shell without installing anything:
 
 ```bash
 export PATH="$PWD:$PATH"
 trama
 ```
 
-El `PATH` anterior vale para esa shell. No se modifican tus archivos de inicio ni
-se instala un comando global. También puedes lanzar:
+That `PATH` applies to the current shell. Startup files are not modified and no
+global command is installed. Other launch options:
 
 ```bash
 python3 scripts/trama_tui.py perfil.toml
 ./trama --help
 ```
 
-La terminal debe tener al menos **72 columnas × 20 filas** y un `TERM` válido.
-Tema oscuro, selección teal/cian y coral para error/grabación; alternativa
-monocroma cuando el terminal no ofrece color. No requiere bibliotecas de TUI externas.
+The terminal needs at least **72 columns × 20 rows** and a valid `TERM`. The dark
+theme uses teal/cyan selection and coral for errors/recording, with a monochrome
+fallback when colors are unavailable. No external TUI libraries are required.
 
-Tab/Shift+Tab recorre las cinco secciones persistentes:
+Tab/Shift+Tab cycles through five persistent sections:
 
-- **Overview**: resumen, grabar, prueba de 30 segundos y guardar.
-- **Layers**: lista y propiedades de la capa seleccionada; en terminales amplios
-  aparecen juntas, en terminales compactas las propiedades quedan debajo.
-- **Capture**: pantalla, resolución conocida y FPS.
-- **Audio**: micrófono y audio del juego/sistema.
-- **Output**: carpeta y nombre del archivo por separado; último MKV.
+- **Overview**: summary, record, 30-second test and save.
+- **Layers**: list and selected-layer properties; side by side in wide terminals,
+  with properties below in compact terminals.
+- **Capture**: display, known resolution and FPS.
+- **Audio**: microphone and game/system audio.
+- **Output**: separate folder and filename fields; last MKV.
 
-Flechas o `j`/`k` seleccionan campo/capa/acción; Enter ejecuta o edita.
-Espacio abre las acciones del contexto, incluyendo agregar/quitar/reordenar,
-guardar como y cargar perfiles. `?` muestra todos los atajos. Los atajos directos
-siguen disponibles desde cualquier sección. Esc vuelve o cancela; al salir con
-cambios sin guardar se pide qué hacer. Ctrl+U borra un campo de texto.
+Arrows or `j`/`k` select a field/layer/action; Enter edits or executes. Space opens
+context actions, including add/remove/reorder, save as and load profile. `?` shows
+all shortcuts. Direct shortcuts remain available from every section. Esc goes
+back or cancels; quitting with unsaved changes asks what to do. Ctrl+U clears a
+text field.
 
-La cabecera distingue LISTO, ERROR y CONFIGURACIÓN INCOMPLETA según los datos
-consultados y los errores conocidos. LISTO no certifica que todos los recursos
-sean válidos: la validación completa se conserva antes de iniciar GSR.
-El nombre del perfil marca los cambios sin guardar. El pie muestra pocos atajos
-relevantes para la sección actual; `!` permite leer errores largos.
+The header distinguishes READY, ERROR and SETUP INCOMPLETE using queried data and
+known errors. READY does not certify every asset: full validation still runs
+before GSR starts. The profile name marks unsaved changes. The footer shows a few
+relevant shortcuts; `!` opens full error text when truncated.
 
-Durante la grabación se conserva la vista mínima estática: PREPARANDO, GRABANDO
-o CERRANDO, duración solicitada cuando existe y destino del archivo. No se añade
-contador periódico, uso de hardware supuesto ni edición durante la captura.
+Recording keeps a minimal static view: PREPARING, RECORDING or CLOSING, requested
+duration when available and output destination. There is no periodic counter,
+assumed hardware telemetry or editing during capture.
 
-## Idioma: automático, español e inglés
+## Language: automatic, Spanish and English
 
-La primera vez, Trama consulta `LC_ALL`, después `LC_MESSAGES` y finalmente
-`LANG`, usando la primera variable no vacía. Un idioma `es` (como `es_MX.UTF-8`)
-activa español; inglés, cualquier otro idioma y `C`/`POSIX` usan inglés.
-La detección es local: no necesita API, red ni servicios de traducción.
+On first run Trama checks `LC_ALL`, then `LC_MESSAGES`, then `LANG`, taking the
+first nonempty value. An `es` language such as `es_MX.UTF-8` selects Spanish;
+English, other languages and `C`/`POSIX` use English. Detection is local: no API,
+network access or translation service.
 
-Pulsa **`L` mayúscula** desde cualquier sección para elegir:
+Press uppercase **`L`** from any section to select:
 
-- **Automático (sistema)**: seguir el idioma del entorno.
-- **Español**: usar siempre español.
-- **English**: usar siempre inglés.
+- **Automatic (system)**: follow the environment language.
+- **Español**: always use Spanish.
+- **English**: always use English.
 
-Enter guarda y aplica el cambio inmediatamente; Esc lo cancela. También está en
-Espacio → acciones de Overview. La cabecera muestra el idioma activo junto a `L`.
-La ayuda (`?`/F1) conserva una acción por renglón en ambos idiomas.
+Enter saves and applies immediately; Esc cancels. The selector is also available
+under Space → Overview actions. The header shows the active language beside `L`.
+Help (`?`/F1) keeps one action per entry in both languages.
 
-La preferencia se guarda en `$XDG_CONFIG_HOME/trama/ui.toml`, o en
-`~/.config/trama/ui.toml` si no se define esa variable:
+The preference is saved in `$XDG_CONFIG_HOME/trama/ui.toml`, or
+`~/.config/trama/ui.toml` when that variable is unset:
 
 ```toml
 language = "auto"
 ```
 
-Valores admitidos: `auto`, `es`, `en`. No se añade ningún campo al perfil TOML de
-la grabación. Si el archivo de preferencia falta o es inválido, se usa automático.
-Los datos de sesión y los perfiles anteriores no se migran ni se eliminan.
+Accepted values: `auto`, `es`, `en`. No field is added to the recording TOML.
+A missing/invalid preference file falls back to automatic. Session data and
+existing profiles are neither migrated nor deleted.
 
-Para cambiar el idioma **solo en esta ejecución**, incluso en `--help`:
+To change language **for this run only**, including `--help`:
 
 ```bash
 ./trama --lang en
@@ -95,245 +94,238 @@ Para cambiar el idioma **solo en esta ejecución**, incluso en `--help`:
 ./trama --lang en --help
 ```
 
-Prioridad: `--lang` → preferencia guardada → automático. Elegir un idioma con
-`L` durante la sesión guarda una nueva preferencia. Los atajos no cambian al
-traducir la interfaz. Los nombres de dispositivos, capas y archivos se mantienen
-intactos. Los diagnósticos del motor, del loader y del sistema se muestran en su
-idioma original; esta entrega traduce la TUI, no las otras CLI ni la documentación.
+Precedence: `--lang` → saved preference → automatic. Choosing with `L` during a
+session saves a new preference. Shortcuts do not change with language. Device,
+layer and file names stay intact. Engine, loader and system diagnostics retain
+their original language. TUI translation does not translate the other CLI tools;
+this documentation has been translated separately.
 
-## Primera vez
+## First run
 
-Si abres un nombre de perfil que todavía no existe y se pudo consultar la
-pantalla, se abre este recorrido. También puedes abrirlo con `w`:
+Opening a profile name that does not exist starts this flow once a display query
+succeeds. You can also open it with `w`:
 
-1. Elige la pantalla por su nombre y resolución.
-2. Elige el micrófono por nombre, o el predeterminado. Para un avatar necesitas
-   una entrada; «sin micrófono» no basta.
-3. Busca el GIF de reposo y el GIF de habla en el selector de archivos.
-4. Elige una de las cuatro esquinas. La capa nueva propone caja de 300 px y
-   margen de 20 px, que puedes cambiar en esa misma pantalla.
-5. Selecciona **Guardar perfil y grabar 30 segundos**. También puedes guardar sin
-   grabar, o volver a editar sin guardar.
+1. Choose the display by name and resolution.
+2. Choose a microphone by name or the system default. An avatar needs an input;
+   the no-microphone option is insufficient.
+3. Find idle and talking GIFs in the file picker.
+4. Choose one of four corners. A new layer defaults to a 300 px box and a 20 px
+   margin, both editable on that screen.
+5. Select **Save profile and record for 30 seconds**. You may instead save and
+   continue editing, or return without saving.
 
-El selector de archivos permite abrir carpetas con Enter y elegir un archivo con
-Enter. `p` permite escribir o pegar una ruta completa; esa ruta relativa se basa
-en la carpeta que muestra el selector. Esc cancela. Los filtros visuales muestran
-GIF para avatar y PNG/JPG/GIF para gráficos; el decoder Rust valida el contenido.
+In the picker, Enter opens a folder or selects a file. `p` accepts a typed/pasted
+path; relative paths start at the displayed folder. Esc cancels. Visual filters
+show GIFs for avatars and PNG/JPG/GIF for graphics; the Rust decoder validates
+actual content.
 
-Después de iniciar, cambia a Minecraft. La captura incluye todo el monitor; no
-hay cuenta atrás ni atajo global de parada. Al terminar se vuelve a la TUI y se
-muestra el nombre del MKV. Pulsa `o` para ver la ruta completa y los archivos
-auxiliares, con desplazamiento si no caben en pantalla.
+After recording starts, switch to the content you want to capture. The entire
+display is recorded: there is no countdown or global stop shortcut. On completion
+the TUI returns and shows the MKV filename. Press `o` for its full path and
+auxiliary files, scrolling when needed.
 
-Puedes cancelar el recorrido en sus diálogos con Esc. Los ajustes ya aplicados
-quedan en memoria: `s` los guarda, y salir avisa si hay cambios.
+Esc can cancel each wizard dialog. Already-applied settings stay in memory;
+`s` saves them and quitting warns about changes.
 
-## Uso diario y último perfil
+## Daily use and last profile
 
-Sin argumento, Trama busca:
+Without an argument, Trama looks for:
 
-1. El último perfil abierto/guardado que conste en su estado de sesión.
-2. Si no hay estado válido, `perfil.toml` en el directorio actual.
+1. The last opened/saved profile recorded in session state.
+2. `perfil.toml` in the current directory if no valid state is available.
 
-Un argumento explícito, como `./trama otro.toml`, tiene prioridad. La ruta del
-último perfil se recuerda en:
+An explicit argument such as `./trama otro.toml` takes precedence. The last
+profile's path is remembered in:
 
 ```text
 $XDG_STATE_HOME/xolo/session.json
 ```
 
-Si no has definido `XDG_STATE_HOME`, usa `~/.local/state/xolo/session.json`.
-Se conserva esta ubicación histórica para no mover datos personales; no es un
-alias ni un comando anterior. Ese archivo contiene una ruta al perfil, no una copia de sus cambios sin guardar.
-La TUI no modifica el perfil al abrirlo. Si el último archivo fue eliminado, se
-prepara un perfil nuevo asociado a esa ruta: `l` permite abrir otro o `S` guardarlo
-con otro nombre. Los errores al guardar el estado de sesión no sustituyen el TOML.
+Without `XDG_STATE_HOME`, this is `~/.local/state/xolo/session.json`. The historical
+location avoids moving personal data; it is not a command alias. The file stores
+a profile path, not its unsaved changes. Opening a profile does not modify it.
+If the last file was deleted, a new profile is prepared at that path: `l` opens
+another and `S` saves under another name. Session-state write errors do not
+replace the TOML profile.
 
-En el uso diario puedes pulsar **`r` desde el inicio** para grabar, o `t` para una
-prueba de 30 segundos. No hace falta recorrer asistentes si la escena está lista.
-La validación real de dispositivos y recursos sigue ejecutándose antes de grabar.
+For daily use press **`r` from the initial screen** or `t` for a 30-second test.
+A ready scene does not require repeating the wizard. Real device/asset validation
+still runs before recording.
 
-## Teclas de la pantalla principal
+## Main-screen keys
 
-| Tecla | Acción |
+| Key | Action |
 | --- | --- |
-| Tab / Shift+Tab | Cambiar sección enfocada |
-| ↑/↓ o `j`/`k` | Elegir campo o capa de la sección actual |
-| ←/→ en Overview | Elegir botón |
-| Enter | Editar campo o ejecutar botón enfocado |
-| Espacio | Abrir acciones de la sección enfocada |
-| L | Elegir idioma y guardar la preferencia |
-| `?` o F1 | Ayuda completa |
-| `e` | Editar un campo de la capa seleccionada |
-| `p` | Elegir pantalla |
-| `m` | Elegir micrófono |
-| `f` | Editar FPS (1..120) |
-| `g` | Activar/desactivar audio del juego/sistema |
-| `d` | Elegir carpeta de grabaciones |
-| `n` | Editar nombre del video, incluido `{timestamp}` |
-| `a` | Agregar gráfico PNG/JPG/GIF |
-| `v` | Agregar avatar, si no hay uno |
-| `c` | Colocar la capa seleccionada por esquina y tamaño |
-| `h` | Ocultar/mostrar la capa sin quitarla |
-| Supr o `D` | Quitar una capa, con confirmación; no borra el archivo |
-| `[` / `]` | Mover la capa hacia el fondo / hacia delante en el listado |
-| `s` | Guardar el perfil actual |
-| `S` | Guardar como otro TOML |
-| `l` | Cargar otro TOML |
-| `r` | Grabar hasta detener |
-| `t` | Grabar una prueba de 30 segundos |
-| `o` | Mostrar el último MKV de esta sesión, su carpeta, log e informe |
-| `u` | Volver a consultar pantallas y audio |
-| `w` | Recorrido inicial |
-| `!` | Ver el diagnóstico completo |
-| `q` o Esc | Salir; avisa de cambios sin guardar |
+| Tab / Shift+Tab | Change focused section |
+| ↑/↓ or `j`/`k` | Select a field or layer in this section |
+| ←/→ in Overview | Select a button |
+| Enter | Edit the focused field or activate its button |
+| Space | Open section actions |
+| L | Choose and save language preference |
+| `?` or F1 | Full help |
+| `e` | Edit one field of the selected layer |
+| `p` | Choose display |
+| `m` | Choose microphone |
+| `f` | Edit FPS (1..120) |
+| `g` | Toggle game/system audio |
+| `d` | Choose recordings folder |
+| `n` | Edit video filename, including `{timestamp}` |
+| `a` | Add PNG/JPG/GIF graphic |
+| `v` | Add an avatar if none exists |
+| `c` | Place selected layer by corner and size |
+| `h` | Hide/show without removing the layer |
+| Del or `D` | Confirm layer removal; do not delete its file |
+| `[` / `]` | Move layer toward the back / front of the list |
+| `s` | Save current profile |
+| `S` | Save as another TOML |
+| `l` | Load another TOML |
+| `r` | Record until stopped |
+| `t` | Record a 30-second test |
+| `o` | Show this session's last MKV, folder, log and report |
+| `u` | Query displays and audio again |
+| `w` | First-run wizard |
+| `!` | Full diagnostics |
+| `q` or Esc | Quit, warning about unsaved changes |
 
-Las letras distinguen mayúsculas: `d` es carpeta y `D` es quitar capa.
-`o` muestra las rutas dentro de la TUI; no abre un reproductor ni el gestor de
-archivos. La lista mantiene la semántica actual: la última capa se dibuja encima.
+Letters are case-sensitive: `d` chooses a folder; `D` removes a layer. `o` displays
+paths inside the TUI, not a player or file manager. The existing list semantics
+remain: the final layer is drawn on top.
 
-## Cambiar solo un campo
+## Change just one field
 
-Selecciona una capa y pulsa `e`. Aparece una lista de campos con sus valores
-actuales: nombre, archivo(s), sensibilidad del avatar, colocación, visibilidad,
-ancho/alto, proporción y X/Y avanzadas. Selecciona **solo** el campo que quieras
-cambiar. Después de aplicarlo vuelves a la lista; Esc vuelve al inicio.
+Select a layer and press `e`. The field list shows current name, file(s), avatar
+sensitivity, placement, visibility, width/height, aspect ratio and advanced X/Y.
+Select **only** the field to change. Applying returns to the list; Esc returns
+to the main screen.
 
-No se recorre todo un formulario. Visible y conservar proporción se alternan al
-seleccionarlos. Para ancho o alto escribe `-` si quieres dejar esa dimensión
-sin especificar y que se derive según las reglas existentes. Desactivar proporción
-requiere ambas dimensiones explícitas.
+There is no full-form walkthrough. Selecting Visible or Keep aspect ratio toggles
+it. Enter `-` for width or height to leave that dimension unspecified and derive
+it under existing rules. Disabling aspect preservation requires both dimensions.
 
-Los errores aparecen en el campo correspondiente o en su diálogo; los de
-validación previa a la captura se marcan junto al ajuste y en el estado inferior.
-`!` muestra el texto completo si está recortado. Una edición inválida conserva el
-valor anterior. Las rutas nuevas se comprueban con el loader Rust sin arrancar
-GSR ni crear un contexto gráfico.
+Errors appear beside the field or in its dialog. Pre-capture validation errors
+are marked beside the setting and in the bottom status. `!` shows truncated text
+in full. Invalid edits preserve the previous value. New paths are checked by the
+Rust loader without starting GSR or creating a graphics context.
 
-## Esquinas y tamaño efectivo
+## Corners and effective size
 
-En `c` se ofrecen:
+`c` offers:
 
-- Superior izquierda.
-- Superior derecha.
-- Inferior izquierda.
-- Inferior derecha.
-- Caja máxima, en píxeles.
-- Margen, en píxeles.
-- X/Y manuales, como opción avanzada.
+- Top-left.
+- Top-right.
+- Bottom-left.
+- Bottom-right.
+- Maximum box size, in pixels.
+- Margin, in pixels.
+- Manual X/Y, an advanced option.
 
-Primero puedes cambiar tamaño o margen; luego elige la esquina para aplicar.
-La colocación rápida activa proporción y usa una caja cuadrada del tamaño elegido.
-El ancho y alto **efectivos** los resuelve el mismo código Rust del plugin. Una
-imagen de 2:1 dentro de una caja de 300 se coloca como 300×150, no como 300×300.
-La fórmula resta el tamaño efectivo al lienzo del monitor, usando redondeo hacia
-arriba para dimensiones fraccionarias. Se rechaza un tamaño que no cabe con el
-margen indicado; puedes usar X/Y avanzadas para recortes deliberados.
+Change size or margin first, then select a corner to apply. Quick placement
+preserves aspect ratio inside a square box of the chosen size. The plugin's
+actual Rust code resolves **effective** width/height: a 2:1 image in a 300 px box
+occupies 300×150, not 300×300. Position subtracts effective size from the monitor
+canvas, rounding fractional dimensions upward. Sizes that do not fit with the
+margin are rejected; advanced X/Y allows intentional clipping.
 
-Al abrir una capa existente se intenta reconocer su esquina y margen a partir
-de la geometría efectiva; mover una capa que ya está en una esquina no obliga a
-volver a introducir su tamaño. Para una capa nueva se propone inferior derecha,
-caja de 300 y margen de 20. El avatar comparte la caja basada en reposo con el GIF
-de habla, como en el plugin existente.
+Existing geometry is used to recognize corner/margin when possible, so moving an
+already-anchored layer need not require reentering its size. New layers default
+to bottom-right, a 300 px box and a 20 px margin. The avatar uses its idle-based
+box for both idle and talking, matching the plugin.
 
-En 1920×1080, el avatar cuadrado a 300×300 con margen 20 queda en 1600/760. Para
-moverlo arriba a la izquierda: selecciona el avatar en Layers, `c`, elige «Superior izquierda»
-y Enter. No tienes que escribir X/Y.
+At 1920×1080, a square 300×300 avatar with margin 20 is placed at 1600/760.
+To move it top-left: select it in Layers, press `c`, choose Top-left and Enter.
+No manual X/Y is required.
 
-El perfil guarda los X/Y calculados, no un nuevo tipo de anclaje. Si cambias de
-resolución, actualiza los dispositivos con `u` y vuelve a colocar la capa. Las
-posiciones manuales se siguen editando como píxeles desde arriba/izquierda.
+The profile stores calculated X/Y, not a new anchor type. After changing
+resolution, refresh devices with `u` and place the layer again. Manual positions
+remain pixels measured from the upper-left corner.
 
-## Carpeta y nombre del video
+## Recordings folder and video filename
 
-Los dos ajustes están en Output (también accesibles con `d` y `n`):
+Both settings are in Output, also available with `d` and `n`:
 
-- `d`: navega a una carpeta y pulsa **Espacio** para usarla. `p` permite escribir
-  una ruta, también de una carpeta nueva que se creará al grabar.
-- `n`: escribe solo el nombre, por ejemplo `minecraft-{timestamp}.mkv`.
-  No se permiten componentes de carpeta en este campo.
+- `d`: browse to a folder and press **Space** to use it. `p` accepts a path,
+  including a new folder that will be created when recording starts.
+- `n`: type only the filename, for example `minecraft-{timestamp}.mkv`.
+  Folder components are not allowed in this field.
 
-Se combinan y guardan en el campo existente, por ejemplo:
+They are combined and saved in the existing field, for example:
 
 ```toml
 [recording]
 output = "recordings/minecraft-{timestamp}.mkv"
 ```
 
-Así sigue funcionando tu `perfil.toml` y la CLI directa. No se añade otro esquema
-ni campos duplicados `folder`/`filename`. `{timestamp}` se sustituye en UTC al
-preparar cada captura. El nombre debe terminar en `.mkv`; una salida fija ya usada
-se rechaza para no sobrescribirla. En la selección nueva de carpeta no se permiten
-plantillas; usa `{timestamp}` en el nombre.
+Existing `perfil.toml` and direct recording remain compatible. No new schema or
+duplicate `folder`/`filename` fields are added. `{timestamp}` is replaced with UTC
+when preparing each capture. The name must end in `.mkv`; an existing fixed output
+is rejected rather than overwritten. Folder selection does not allow templates;
+put `{timestamp}` in the filename.
 
-El guardado conserva las reglas existentes de rutas relativas a la carpeta del
-TOML, incluso al guardar como otro archivo. No copia gráficos ni mueve los videos.
+Saving retains paths relative to the TOML folder, including Save as. Graphics
+are not copied and videos are not moved.
 
-## Grabar, detener y volver
+## Record, stop and return
 
-La TUI ejecuta la validación y el grabador existentes en un hilo de trabajo;
-solo el hilo principal usa curses. Durante la captura muestra una **vista mínima
-estática** con estado, destino, duración solicitada de la prueba si corresponde
-y tecla de parada. No hay contador animado ni redibujado periódico de paneles.
-La edición queda bloqueada durante la validación/captura.
+Existing validation and recording run on a worker thread; only the main thread
+uses curses. Capture shows a **minimal static view** with state, destination,
+requested test duration when applicable and the stop key. There is no animated
+counter or periodic panel redraw. Editing is blocked during validation/capture.
 
-- **`x` o Ctrl+C:** pide detener y vuelve a la TUI cuando GSR cierra el archivo.
-- **`q` o Esc durante la captura:** pide detener y después salir; si hay cambios
-  de perfil, se ofrece guardarlos, descartarlos o seguir editando.
-- **`t`:** detiene automáticamente después de aproximadamente 30 segundos.
+- **`x` or Ctrl+C:** request stopping, then return after GSR closes the file.
+- **`q` or Esc during capture:** request stopping, then quit; unsaved profile
+  changes offer save, discard or keep editing.
+- **`t`:** stop automatically after approximately 30 seconds.
 
-La parada reutiliza SIGINT a GSR, espera de cierre y comprobaciones por ffprobe.
-No mata primero el proceso `parec`, para que GSR y el plugin puedan cerrar sus
-recursos ordenadamente. No hay cambios en los buffers, relojes o código Rust de
-composición. El detector sigue siendo la segunda captura de la entrada elegida.
+Stopping reuses SIGINT to GSR, waits for finalization and checks with ffprobe.
+It does not kill `parec` first, allowing GSR/plugin resources to close in order.
+No composition buffers, clocks or Rust code are changed. The detector remains
+a second capture of the selected input.
 
-Si se detiene mientras valida, se espera a que termine la consulta en curso y se
-cancela antes de lanzar GSR. Las consultas a dispositivos tienen sus propios
-timeouts: no equivale a cancelar instantáneamente cada llamada nativa.
+Stopping during validation waits for the current query to finish, then cancels
+before launching GSR. Device queries have their own timeouts; native calls are
+not all canceled immediately.
 
-Cuando hay éxito se muestra el MKV y `o` permite consultar su ubicación completa.
-Si falla una captura que llegó a crear archivo, se conserva y se señala como
-parcial; si falla una validación antes de grabar, el resultado anterior no se
-presenta como una captura nueva. No hay reproducción o previsualización integrada.
+Success shows the MKV; `o` opens full-path details. A failed capture that created
+a file retains it and marks it partial. A validation failure does not present a
+previous result as a new recording. No integrated playback or preview is provided.
 
-## Guardado y salida
+## Saving and quitting
 
-`s` guarda en el TOML actual. `S` permite otro nombre y confirma si se reemplaza
-un archivo distinto ya existente. El guardado mantiene la normalización existente
-(esquema 2 y rutas relativas) y puede reescribir comentarios/formato del TOML.
+`s` saves the current TOML. `S` accepts another path and confirms overwriting a
+different existing file. Saving preserves normalization (schema 2 and relative
+paths) and can rewrite TOML comments/formatting.
 
-Al salir o cargar otro perfil con cambios se ofrecen «Guardar cambios»,
-«Descartar cambios» y «Seguir editando». Esc conserva la edición. No hay guardado
-silencioso de cambios al abrir, cerrar o grabar desde el inicio. El recorrido
-inicial sí tiene una acción explícita «Guardar perfil y grabar 30 segundos».
+Quitting or loading another profile with changes offers Save changes, Discard
+changes and Keep editing. Esc keeps editing. Opening, closing or recording does
+not silently save changes. First run does have an explicit Save profile and
+record for 30 seconds action.
 
-## Reposo de la interfaz y recursos
+## Idle interface and resources
 
-La pantalla se repinta al recibir entrada, redimensionamiento o un evento del
-trabajador, no en cada vuelta del bucle. Durante la captura el hilo principal
-espera una tecla con timeout de un segundo para comprobar el fin del trabajo;
-las teclas siguen entrando inmediatamente. No consulta ni decodifica recursos
-al pintar. Al cerrar GSR vuelve a los paneles y a la selección anterior.
+The screen repaints on input, resize or a worker event, not on every loop
+iteration. During capture, the main thread waits for input with a one-second
+timeout to check worker completion; keys still arrive immediately. Painting
+performs no asset queries or decoding. When GSR closes, panels and selection return.
 
-Esto pausa la presentación, no destruye el proceso Python ni libera toda su
-memoria. Evita añadir un proceso de control o tener que reconstruir una sesión
-para poder volver a la TUI. No hay nuevas dependencias.
+This suspends presentation, not the Python process or all its memory. It avoids
+adding a control process or rebuilding a session to return to the TUI. There are
+no new dependencies.
 
-Comprobación local orientativa: en ventanas de unos 5 s, el proceso TUI estuvo
-alrededor de 22 MiB de RSS y 0,20 % de un núcleo durante captura **simulada**.
-La CPU de captura quedó prácticamente igual antes y después en ese muestreo;
-el intervalo corto y la resolución del contador no permiten prometer un ahorro
-numérico. Son cifras solo de la TUI, no de GSR, helper, detector ni del conjunto,
-y no representan una medición de rendimiento en COSMIC con un juego real.
+An indicative local sample over roughly 5-second windows measured around 22 MiB
+RSS and 0.20% of one CPU core for the TUI during **simulated** capture. Capture CPU
+was effectively unchanged before/after in that sample; short intervals and
+counter resolution do not justify a numeric savings claim. These figures cover
+only the TUI, not GSR, helper, detector or their total, and do not represent a real
+COSMIC workload benchmark.
 
-La inicialización usa `curses.wrapper` para restaurar eco/modo de terminal al salir
-o propagar un error. SIGTERM también pasa por el cierre de grabación y la
-restauración. Referencias: [curses de Python](https://docs.python.org/3/library/curses.html)
-y [patrón wrapper](https://docs.python.org/3/howto/curses.html#starting-and-ending-a-curses-application).
+Initialization uses `curses.wrapper` to restore terminal echo/mode on exit or
+error propagation. SIGTERM also follows recording shutdown and terminal
+restoration. References: [Python curses](https://docs.python.org/3/library/curses.html)
+and the [wrapper pattern](https://docs.python.org/3/howto/curses.html#starting-and-ending-a-curses-application).
 
-## Comando directo conservado
+## Direct command retained
 
-La TUI no sustituye estos comandos:
+The TUI does not replace these commands:
 
 ```bash
 python3 scripts/compositor.py check perfil.toml
@@ -341,46 +333,45 @@ python3 scripts/compositor.py record perfil.toml --seconds 30
 python3 scripts/compositor.py record perfil.toml
 ```
 
-También sigue disponible el menú clásico `python3 scripts/compositor.py edit`.
-Su [manual de referencia](guia-cli.md) describe TOML, requisitos, audio y diagnóstico.
-El comando `trama` actual acepta el argumento opcional de perfil, `--lang {auto,es,en}` y `--help`;
-no es un paquete publicado ni añade subcomandos de streaming.
+The classic `python3 scripts/compositor.py edit` menu remains available. Its
+[reference manual](guia-cli.md) covers TOML, requirements, audio and diagnostics.
+`trama` currently accepts an optional profile, `--lang {auto,es,en}` and `--help`;
+it adds no streaming subcommands and has not been publicly packaged/released.
 
-## Verificación y límites
+## Verification and limitations
 
-La captura real depende de la sesión gráfica, el controlador y el servidor de
-audio. Las comprobaciones automatizadas no sustituyen una grabación en el equipo
-objetivo.
+Real capture depends on the graphical session, driver and audio server. Automated
+checks do not replace a recording on the target machine.
 
-Pruebas de esta entrega:
+Delivery checks:
 
-- Modelo: esquinas con fuente no cuadrada y tamaño efectivo Rust, avatar y perfil TOML de ejemplo, edición de un campo, carpeta/nombre, guardado/carga, orden,
-  oculto, recursos inexistentes, recuperación de sesión y cambios sin guardar.
-- Pseudoterminal real: recorrido inicial con selector de archivos, recuperación
-  del último perfil, perfil de ejemplo, cambio de esquina sin X/Y,
-  guardado, prueba de 30 s, consulta del MKV y retorno a la TUI.
-- Pseudoterminal: cambio de nombre y carpeta por separado, error de nombre inválido,
-  edición de un solo campo, aviso sin guardar, parada con `x`, SIGINT y SIGTERM.
-- Restauración de ECHO/ICANON al salir de las pruebas de terminal.
-- Secciones en 72×20, 80×24, 110×30 y 160×40; foco, acciones contextuales y resize.
-- Bucle sin repintado al esperar, vista de captura sin paneles ni salida terminal
-  periódica, parada y retorno a los paneles.
-- Suite anterior conservada. Para ejecutarla completa se necesitan también los
-  artefactos de desarrollo `media-dump` y referencia C compilada; no forman parte
-  del runtime mínimo. Consulta el [estado de validación](estado.md#validación-automatizada-y-local).
+- Model: corners with nonsquare sources and Rust effective size, avatar/sample
+  TOML, single-field edits, folder/name, save/load, ordering, hidden state, missing
+  assets, session recovery and unsaved changes.
+- Real pseudoterminal: first run/file picker, last-profile recovery, sample
+  profile, corner changes without X/Y, save, 30-second test, MKV details and return.
+- Pseudoterminal: separate folder/name edits, invalid filename, one-field editing,
+  unsaved warning and stopping with `x`, SIGINT and SIGTERM.
+- ECHO/ICANON restoration after terminal tests.
+- Sections at 72×20, 80×24, 110×30 and 160×40; focus, context actions and resize.
+- No repaint while waiting; capture view has no panels or periodic terminal
+  output; stop and return to panels.
+- Earlier suite retained. Full execution also requires development `media-dump`
+  and compiled C-reference artifacts, not part of the minimal runtime. See
+  [validation status](estado.md#automated-and-local-validation).
 
-Las pruebas de pseudoterminal usan **dispositivos y capturador simulados**, con
-el modelo TOML, decoder Rust, proceso de grabación compartido y MKV sintético real.
-El caso de 30 s espera ese tiempo y comprueba la duración del archivo. Los
-adaptadores viven en `tests/`; no hay un flag de motor falso en el lanzador.
-Las pruebas simuladas no sustituyen captura KMS, audio físico o Minecraft:
-se requiere una sesión gráfica con acceso a DRM/KMS y al servidor de audio.
+Pseudoterminal tests use **simulated devices and capture**, with the real TOML
+model, Rust decoder, shared recording process and a real synthetic MKV. The
+30-second case waits that long and checks file duration. Adapters live in
+`tests/`; the launcher has no fake-engine flag. These checks do not replace KMS,
+physical audio or real workload capture: a graphical session with DRM/KMS and
+audio-server access is required.
 
-El usuario ya confirmó que la TUI funciona y se ve bien en su laptop, además de
-una grabación de 10 minutos. Es confirmación de uso, no una medición instrumentada
-ni una prueba del nuevo paquete instalado.
+The user confirmed the TUI works and looks good on their laptop, plus a 10-minute
+recording. This is a usage report, not instrumented benchmarking. Installed-package
+recording was confirmed later; see [current status](estado.md).
 
-Comandos para repetir las pruebas:
+To repeat tests:
 
 ```bash
 python3 tests/test_trama.py
@@ -391,16 +382,17 @@ python3 tests/test_compositor.py
 python3 tests/test_element_cli.py
 ```
 
-Para repetir la prueba de aceptación en el equipo objetivo:
+To repeat target-machine acceptance:
 
 ```bash
 ./trama perfil.toml
 ```
 
-Tab a Layers, selecciona el avatar, `c`, otra esquina y Enter; `s` guarda, `t` graba 30 s, y `o`
-muestra el archivo final. Comprueba el video, audio, reacción del avatar y retorno
-a la TUI. No se publican nuevas cifras de rendimiento ni ventajas frente a OBS.
+Tab to Layers, select the avatar, press `c`, choose another corner and Enter;
+`s` saves, `t` records 30 seconds and `o` shows the final file. Check video, audio,
+avatar response and return to the TUI. No new resource figures or OBS advantage
+are claimed.
 
-Código: [entrada trama](../trama), [TUI](../scripts/trama_tui.py),
-[modelo y geometría](../scripts/trama_model.py), [grabador compartido](../scripts/compositor.py),
-[pruebas de estado](../tests/test_trama.py), [pruebas PTY](../tests/test_trama_pty.py).
+Code: [trama entry](../trama), [TUI](../scripts/trama_tui.py),
+[model/geometry](../scripts/trama_model.py), [shared recorder](../scripts/compositor.py),
+[state tests](../tests/test_trama.py), [PTY tests](../tests/test_trama_pty.py).

@@ -1,26 +1,26 @@
-# Trabajo en este proyecto
+# Working on this project
 
-## Objetivo
-Construir un compositor ligero sobre GPU Screen Recorder (GSR). Prioridad: grabar juegos y sesiones de desarrollo con buen rendimiento y audio sincronizado en Linux. Base actual: capas PNG/JPG/GIF, avatar por micrófono, perfiles TOML y TUI. La aplicación se llama Trama; su identidad visual está en assets/brand/. Visión y etapas en [docs/plan-rust.md](docs/plan-rust.md); streaming sigue fuera del alcance actual; el paquete preliminar local se documenta en [docs/paquete-preliminar.md](docs/paquete-preliminar.md).
+## Goal
+Build a lightweight compositor on GPU Screen Recorder (GSR). Prioritize screen recording with good performance and synchronized audio on Linux. Current foundation: PNG/JPG/GIF layers, microphone-reactive avatar, TOML profiles and TUI. The application is Trama; its visual identity is in assets/brand/. Vision/stages: [docs/plan-rust.md](docs/plan-rust.md). Streaming remains out of scope; the local preliminary package is documented in [docs/paquete-preliminar.md](docs/paquete-preliminar.md).
 
-Debe consumir menos recursos que OBS con una escena y calidad equivalentes. Los 150 MB mencionados son una aspiración pendiente de medir, no un resultado ni un límite validado.
+It must use fewer resources than OBS with an equivalent scene/quality. The previously mentioned 150 MB is an unmeasured aspiration, not a result or validated limit.
 
-Objetivo de soporte y validación: Wayland/COSMIC. No ampliar modalidades exclusivas de X11; conservar sin cambios el código upstream de GSR que no sea necesario tocar.
+Support/validation target: Wayland/COSMIC. Do not expand X11-only modes; leave unrelated upstream GSR code unchanged.
 
-## Criterio de diseño
-- Diseña una base que permita incorporar imágenes, animaciones, escenas y otros overlays sin rehacer el compositor. Separa composición y comportamientos cuando aporte claridad; no construyas un framework para funciones hipotéticas.
-- Prefiere soluciones simples, legibles y con pocas dependencias. Elige lenguaje, interfaces y mecanismos después de inspeccionar GSR; no fijes arquitectura por las propuestas de conversaciones anteriores.
-- Comprueba API, licencia, versiones y compatibilidad en fuentes oficiales y código real. No presupongas que existe una interfaz de plugins adecuada.
-- Reutiliza GSR para captura y codificación. Justifica cualquier cambio en su núcleo. Conserva recursos personales fuera del proyecto; usa las muestras neutras de examples/assets en pruebas. Verifica tiempos, bucle y transparencia de los GIF.
+## Design criteria
+- Design a foundation that can incorporate images, animations, scenes and other overlays without rewriting composition. Separate composition and behavior where useful; do not build a framework for hypothetical features.
+- Prefer simple, readable solutions with few dependencies. Choose languages, interfaces and mechanisms after inspecting GSR rather than fixing architecture from earlier proposals.
+- Verify APIs, licenses, versions and compatibility in official sources and actual code. Do not assume a suitable plugin interface exists.
+- Reuse GSR for capture/encoding. Justify core changes. Keep personal assets outside the project; use neutral examples/assets samples in tests. Verify GIF timing, loops and transparency.
 
-## Colaboración
-- Trabaja en español. La IA implementa; el usuario evalúa producto y arquitectura. Explica brevemente decisiones importantes y flujo de datos.
-- Inspecciona el proyecto y conserva cambios ajenos. Encadena tareas pequeñas autorizadas y correcciones sin pedir confirmación tras cada paso.
-- Consulta cambios sustanciales de objetivo o compromisos difíciles de revertir. No hagas commits, publicaciones ni instalaciones del sistema sin autorización.
+## Collaboration
+- Communicate with the user in Spanish. The AI implements; the user evaluates product and architecture. Briefly explain important decisions and data flow. Project documentation is in English.
+- Inspect the project and preserve others' changes. Continue small authorized tasks and corrections without asking after every step.
+- Consult on substantial objective changes or hard-to-reverse commitments. Do not commit, publish or install system software without authorization.
 
-## Validación y continuidad
-- Usa comandos y comprobaciones reales, proporcionales al cambio. Distingue lo probado aquí de lo pendiente en el equipo objetivo: Pop!_OS/COSMIC, Intel Iris Xe y 8 GB RAM.
-- Mide el conjunto de procesos y el impacto en CPU, memoria, GPU, fluidez y estabilidad frente a GSR solo y OBS en condiciones comparables. No declares ventajas sin mediciones.
-- Primero logra un flujo pequeño de extremo a extremo; amplía después. Si no cumple la ventaja de recursos, resuelve esa limitación antes de sumar funciones.
-- Mantén este archivo breve. Registra estado y decisiones necesarias para retomar en documentación separada cuando haga falta; referencia solo archivos existentes.
-- Entrega resultado, validación, límites y siguiente paso. No inventes pruebas, resultados ni compatibilidad.
+## Validation and continuity
+- Use real checks proportional to the change. Distinguish local checks from pending target-machine validation: Pop!_OS/COSMIC, Intel Iris Xe and 8 GB RAM.
+- Measure the process set and CPU, memory, GPU, smoothness and stability against GSR alone and OBS under equivalent conditions. Claim no advantages without measurements.
+- First achieve a small end-to-end flow, then expand. If resource advantage is not met, resolve that before adding features.
+- Keep this file brief. Record continuation state and decisions in separate documentation when needed; reference only existing files.
+- Deliver results, validation, limitations and next step. Do not invent test results or compatibility.

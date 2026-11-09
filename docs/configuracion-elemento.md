@@ -1,145 +1,145 @@
-# Configuración de un elemento visual
+# Visual element configuration
 
-Este comando configura posición, dimensiones y visibilidad **iniciales** de
-un solo elemento Rust. Soporta PNG/JPG estáticos y GIF animado; APNG y texto
-no están soportados. El loader identifica el contenido por firma, no por extensión.
-El renderizador recibe RGBA y un rectángulo, sin conocer GIF ni PNGtuber.
+This command sets the **initial** position, dimensions and visibility of one
+Rust element. Static PNG/JPG and animated GIF are supported; APNG and text are
+not. The loader identifies content by signature, not extension. The renderer
+receives RGBA and a rectangle without knowing about GIF or PNGtuber behavior.
 
-Para múltiples capas y avatar usa la [TUI](tui.md) o los perfiles de la
-[CLI de escenas](guia-cli.md). Este comando de elemento único no tiene watcher,
-IPC ni cambios durante la grabación. Cambiar las opciones requiere iniciar otra captura.
-Esto mantiene la configuración fuera del callback y evita introducir control en
-vivo antes de necesitarlo.
+For multiple layers and an avatar use the [TUI](tui.md) or
+[scene CLI profiles](guia-cli.md). This single-element command has no watcher,
+IPC or changes during recording. Changing options requires another capture.
+Configuration stays outside the callback, avoiding premature live control.
 
-## Uso por CLI
+## CLI usage
 
-Ya construido como `build/overlay-rust.so`. Para recompilar/verificar, sin sudo:
+Already built as `build/overlay-rust.so`. To rebuild/verify without sudo:
 
 ```sh
 bash scripts/check-rust-overlay.sh
 ```
 
-Desde la raíz, primero validar sin grabar ni necesitar acceso a GPU:
+From the project root, first validate without recording or GPU access:
 
 ```sh
 python3 scripts/record-element.py --media examples/assets/idle.gif \
   --x 100 --y 80 --width 300 --height 200 --check
 ```
 
-Como este GIF es cuadrado, informa 200×200 en 100/80, visible y proporcional.
-`--check` valida fuente y configuración mediante el mismo código Rust que init;
-no crea una captura. Aún exige el build y el GSR instalado/fingerprint conocido.
+Because this GIF is square, the result is 200×200 at 100/80, visible and
+proportional. `--check` validates source/configuration with the same Rust code as
+init and creates no capture. It still requires the build and known installed GSR
+fingerprint.
 
-Para grabar 30 s con sonido del sistema, sin micrófono, desde la terminal gráfica:
+To record 30 seconds with system audio but no microphone, from a graphical terminal:
 
 ```sh
 python3 scripts/record-element.py --media examples/assets/idle.gif \
   --x 100 --y 80 --width 300 --height 200 --audio --seconds 30
 ```
 
-Se detiene automáticamente. Graba el monitor completo por KMS, H.264 GPU, 30 FPS,
-very_high y MKV. Conserva video/log/métricas en `build/recordings-element/<fecha-id>/`;
-no sobrescribe grabaciones. Ctrl+C termina antes y conserva resultados parciales.
-Sin `--audio` no graba sonido.
+It stops automatically. Capture uses the full monitor through KMS, H.264 GPU,
+30 FPS, `very_high` and MKV. Video/log/metrics go to
+`build/recordings-element/<date-id>/` without overwriting recordings. Ctrl+C
+stops early and retains partial results. Without `--audio`, sound is not recorded.
 
-Para PNG estático y altura únicamente:
+For a static PNG with height only:
 
 ```sh
 python3 scripts/record-element.py --media build/rust-fixtures/idle-static.png \
   --height 180 --seconds 30
 ```
 
-El PNG de ejemplo se puede recrear con `python3 scripts/prepare-rust-example.py`.
-Puede usarse cualquier otro PNG/GIF válido, no depende de esos nombres.
+Recreate the sample PNG with `python3 scripts/prepare-rust-example.py`. Any other
+valid PNG/GIF may be used; the command does not depend on those names.
 
-Ocultar **sin quitar la fuente**:
+Hide **without removing the source**:
 
 ```sh
 python3 scripts/record-element.py --media examples/assets/idle.gif --hidden --seconds 30
 ```
 
-El archivo se valida, el GIF conserva su caché y la textura sigue cargada. El
-callback no dibuja, no actualiza textura ni solicita daño propio mientras esté
-oculto. Para una captura posterior, omite `--hidden` o usa `--visible`. No libera
-RAM ni elimina el recurso; GSR sigue teniendo su ruta de plugins y captura.
-No se afirma que ocultar ahorre todo el coste de GPU o memoria del conjunto.
+The file is validated, the GIF retains its cache and the texture stays loaded.
+While hidden, the callback neither draws, updates its texture nor requests its
+own damage. For a later capture omit `--hidden` or use `--visible`. Hiding does
+not release RAM or remove the asset; GSR retains its plugin/capture path. It is
+not claimed to eliminate all GPU/memory costs of the pipeline.
 
-Deformación solo cuando se pide explícitamente:
+Stretching is explicit:
 
 ```sh
 python3 scripts/record-element.py --media examples/assets/idle.gif \
   --width 300 --height 200 --stretch --seconds 30
 ```
 
-## Semántica de geometría
+## Geometry semantics
 
-Coordenadas en píxeles del **lienzo grabado**, desde arriba/izquierda. No son
-coordenadas de una ventana o de los píxeles originales del archivo.
+Coordinates are pixels on the **recorded canvas**, measured from its upper-left
+corner, not window coordinates or original image pixels.
 
-| Opciones | Resultado |
+| Options | Result |
 | --- | --- |
-| Ninguna dimensión | Ancho 320, altura derivada de la proporción |
-| Solo ancho | Altura derivada |
-| Solo alto | Ancho derivado |
-| Ancho y alto | Caja máxima: escala uniforme para caber dentro de ambas dimensiones |
-| Ancho y alto con --stretch | Exactamente esas dimensiones; permite deformación |
+| Neither dimension | Width 320, height derived from aspect ratio |
+| Width only | Derived height |
+| Height only | Derived width |
+| Width and height | Maximum box: uniform scaling to fit both dimensions |
+| Width and height with --stretch | Exact dimensions, allowing distortion |
 
-La caja proporcional se alinea por su esquina superior izquierda en X/Y, sin
-centrado automático, recorte interno ni ampliación para llenar la caja. Puede
-quedar espacio a derecha/abajo. La posición por defecto sigue siendo 32/32.
-Se permiten coordenadas negativas para colocar parcialmente fuera de pantalla;
-OpenGL recorta contra el lienzo. Si queda completamente fuera, no aparece.
+The proportional box aligns its upper-left corner at X/Y: no automatic centering,
+internal cropping or enlargement to fill the box. Space may remain on the right
+or bottom. Default position remains 32/32. Negative coordinates allow partially
+offscreen placement; OpenGL clips to the canvas. Completely offscreen elements
+are not visible.
 
-X/Y: enteros entre −16384 y 16384. Dimensiones explícitas: enteros 1..16384.
-Dimensiones derivadas: mayores que cero y hasta 16384; pueden ser fraccionarias
-para no deformar por redondeo. Un recurso de proporción extrema puede requerir
-una caja menor para que ambas dimensiones finales respeten el límite.
+X/Y are integers −16384..16384. Explicit dimensions are integers 1..16384.
+Derived dimensions must be positive and at most 16384; they may be fractional to
+avoid rounding distortion. Extreme aspect ratios may need a smaller box so both
+final dimensions remain within limits.
 
-## Variables de entorno y precedencia
+## Environment variables and precedence
 
-El plugin directo también se configura sin el wrapper. Se leen una vez en init:
+The direct plugin can also be configured without the wrapper. Variables are read
+once during init:
 
-| Variable | Valor inicial / contrato |
+| Variable | Initial value / contract |
 | --- | --- |
-| GSR_RUST_IMAGE | Ruta obligatoria PNG/JPG/GIF |
-| GSR_OVERLAY_X, GSR_OVERLAY_Y | 32, 32; enteros con signo |
-| GSR_OVERLAY_WIDTH | Opcional; 320 efectivo si tampoco se indica altura |
-| GSR_OVERLAY_HEIGHT | Opcional |
-| GSR_OVERLAY_KEEP_ASPECT | true; false exige ancho y alto efectivos explícitos |
+| GSR_RUST_IMAGE | Required PNG/JPG/GIF path |
+| GSR_OVERLAY_X, GSR_OVERLAY_Y | 32, 32; signed integers |
+| GSR_OVERLAY_WIDTH | Optional; effective 320 if height is also unspecified |
+| GSR_OVERLAY_HEIGHT | Optional |
+| GSR_OVERLAY_KEEP_ASPECT | true; false requires both effective dimensions explicitly |
 | GSR_OVERLAY_VISIBLE | true |
 
-Booleanos de entorno: exactamente `true` o `false`. Valores inválidos se rechazan,
-no se corrigen silenciosamente. Oculto no permite una fuente o geometría inválida.
-Los flags CLI sobrescriben únicamente las variables correspondientes; las otras
-variables exportadas siguen vigentes. `--keep-aspect` y `--visible` permiten
-revertir `false` exportados. Ancho heredado más alto CLI forman una caja; para
-altura solamente, no exportar ancho. Cada proceso hijo recibe argumentos/env
-estructurados, no comandos construidos para shell.
+Environment booleans are exactly `true` or `false`. Invalid values are rejected,
+not silently corrected. Hidden state does not permit an invalid source/geometry.
+CLI flags override only their corresponding variables; other exported variables
+remain active. `--keep-aspect` and `--visible` override exported `false`. An
+inherited width plus CLI height forms a box; for height only, do not export width.
+Child processes receive structured arguments/environment, not shell command strings.
 
-El informe guarda variables originales y geometría/visibilidad efectiva resuelta
-por Rust. Los scripts anteriores GIF Rust también reconocen las variables nuevas.
-La comparación con la referencia **C** rechaza altura, oculto, deformación o X/Y
-negativos porque C no los implementa; no se deben comparar layouts distintos.
-Los scripts del prototipo C no adquieren estas opciones y permanecen intactos.
+The report stores original variables and Rust-resolved effective geometry and
+visibility. Earlier Rust GIF scripts also recognize the new variables. Comparison
+with the **C** reference rejects height, hidden state, stretching or negative X/Y
+because C does not implement them; different layouts must not be compared.
+The C prototype scripts do not acquire these options and remain unchanged.
 
-## Diseño y garantías conservadas
+## Design and preserved guarantees
 
-`config.rs` valida un `ElementConfig` y resuelve `Placement` con dimensiones
-intrínsecas de la fuente. No contiene OpenGL ni comportamiento de avatar. El
-renderizador solo usa ese rectángulo; el loader conserva sus formatos reales.
-Son tipos concretos, sin traits de motor, ECS ni sistema de plugins propio.
-La cdylib actual es 0.4.0 / versión de plugin 4, con la ABI GSR conocida.
+`config.rs` validates `ElementConfig` and resolves `Placement` from intrinsic
+source dimensions. It contains neither OpenGL nor avatar behavior. The renderer
+uses only that rectangle; the loader retains its actual formats. These are
+concrete types, without engine traits, ECS or a custom plugin system. The current
+cdylib is 0.4.0 / plugin version 4, using the known GSR ABI.
 
-La configuración se resuelve antes de renderizar; no hay lecturas/parseo en draw.
-Escalar cambia el quad GPU, **no** la resolución de las imágenes decodificadas:
-poner un GIF pequeño en pantalla no reduce automáticamente el caché original.
-PNG libera su RGBA CPU tras upload. GIF sigue precargado, cache ≤16 MiB, temporales
-gestionados ≤8 MiB y entrada ≤8 MiB, con mismos tiempos/disposal/loops. Preserva
-alfa premultiplicado, estado GL, contexto/hilo, deinit y barreras de panic.
+Configuration is resolved before rendering: no reads/parsing in draw. Scaling
+changes the GPU quad, **not** decoded image resolution. Displaying a small GIF
+does not automatically reduce its original cache. PNG releases CPU RGBA after
+upload. GIF remains preloaded with cache ≤16 MiB, managed temporaries ≤8 MiB and
+input ≤8 MiB, preserving timing/disposal/loops. Premultiplied alpha, GL state,
+context/thread, deinit and panic barriers are retained.
 
-## Verificación y límites
+## Verification and limitations
 
-La suite comprueba ABI, geometría, transparencia, GIF y cierre en GL offscreen;
-la CLI tiene pruebas de defaults, precedencia, tamaños y entradas inválidas.
-Consulta [desarrollo](desarrollo.md) y [estado](estado.md) para repetir pruebas y
-distinguirlas de una grabación real. No se prometen métricas de otra compilación.
+The suite checks ABI, geometry, transparency, GIFs and shutdown in offscreen GL.
+CLI tests cover defaults, precedence, sizes and invalid input. See
+[development](desarrollo.md) and [status](estado.md) to repeat tests and distinguish
+them from real capture. No metrics from another build are promised.

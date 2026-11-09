@@ -1,42 +1,42 @@
-# Paquete preliminar de Trama
+# Trama preliminary package
 
-Estado: evaluación local para **Pop!_OS 24.04 / amd64 / Wayland-COSMIC**.
-No es una publicación estable ni una promesa de compatibilidad con otras distros.
-La versión de aplicación es `0.1.0~alpha1`; el plugin conserva su versión 0.4.0
-porque son componentes con versionado independiente.
+Status: local evaluation for **Pop!_OS 24.04 / amd64 / Wayland-COSMIC**.
+This is not a stable release or a promise of compatibility with other distributions.
+Application version is `0.1.0~alpha1`; the plugin retains 0.4.0 because these
+components use independent version numbers.
 
-## Qué contiene
+## Contents
 
-- Comando `trama`, TUI bilingüe y CLI compartida de grabación.
-- Plugin Rust y validador de escenas del build verificado.
-- GSR **6.1.7**, commit `f97d1e392816503282d20a0804c3ce3fd2943767`, y su
-  `gsr-kms-server`, privados en `/usr/lib/trama/engine/`.
-- Icono, entrada de aplicaciones con `Terminal=true`, perfil neutro de muestra,
-  manual TUI y avisos de dependencias.
+- `trama` command, bilingual TUI and shared recording CLI.
+- Rust plugin and scene validator from the verified build.
+- GSR **6.1.7**, commit `f97d1e392816503282d20a0804c3ce3fd2943767`, and its
+  `gsr-kms-server`, private to `/usr/lib/trama/engine/`.
+- Icon, application entry with `Terminal=true`, neutral sample profile, TUI manual
+  and dependency notices.
 
-No contiene la GUI de GSR, `gsr-cli`, videos, perfiles personales, compiladores,
-referencia C, tests, targets de desarrollo ni bibliotecas multimedia copiadas.
-Las bibliotecas y herramientas del sistema se declaran como dependencias de APT.
-El motor conserva sus capacidades internas: no se ha recortado ni reescrito GSR.
-Aunque el objetivo sea Wayland, el binario upstream conserva dependencias X11.
+It does not bundle GSR's GUI, `gsr-cli`, videos, personal profiles, compilers, the C
+reference, tests, development targets or copies of shared multimedia libraries.
+System libraries/tools are declared as APT dependencies. The engine retains its
+internal capabilities: GSR has not been reduced or rewritten. Although Wayland is
+the target, upstream's binary retains X11 dependencies.
 
-Trama elige su motor privado cuando existe el directorio `engine/`. No instala
-`gpu-screen-recorder` en el PATH global ni reemplaza el GSR nativo existente.
-El manifiesto comprueba los hashes de motor, plugin, helper y validador. No
-acepta sustituir solo una de esas piezas por otra versión.
+Trama selects its private engine when `engine/` exists. It does not install
+`gpu-screen-recorder` globally in PATH or replace an existing native GSR.
+The manifest checks engine, plugin, helper and validator hashes. Replacing just
+one component with another version is not accepted.
 
-## Construcción local sin sudo
+## Local build without sudo
 
-Requiere el build existente y verificado de GSR/plugin, herramientas de Debian
-(`dpkg-deb`, `dpkg-shlibdeps`), Cargo/Rust y las dependencias del lockfile
-presentes en caché. Para los builds del motor/plugin, consulta
-[desarrollo](desarrollo.md) y el [manual](guia-cli.md#2-instalación-y-requisitos).
+Requires the existing verified GSR/plugin build, Debian tools (`dpkg-deb`,
+`dpkg-shlibdeps`), Cargo/Rust and cached lockfile dependencies. For engine/plugin
+builds, see [development](desarrollo.md) and the
+[manual](guia-cli.md#2-installation-and-requirements).
 
 ```bash
 python3 scripts/build-deb.py
 ```
 
-El resultado queda en `build/packages/`:
+Output is written to `build/packages/`:
 
 ```text
 trama_0.1.0~alpha1_amd64.deb
@@ -44,18 +44,18 @@ trama_0.1.0~alpha1_amd64-sources.tar.xz
 trama_0.1.0~alpha1_amd64.sha256
 ```
 
-`--output /ruta/a/carpeta` cambia el directorio de salida. No hay instalaciones,
-`setcap`, servicios ni cambios a `/usr` durante la construcción.
+`--output /ruta/a/carpeta` changes the output directory. Building does not install
+anything, run `setcap`, configure services or change `/usr`.
 
-El archivo de fuentes va separado del runtime: incluye código propio, snapshot
-upstream y dependencias Cargo vendorizadas con sus avisos. Desde su raíz,
-`bash packaging/rebuild-from-source.sh` recompila sin instalar, con las
-herramientas/dependencias nativas previamente disponibles. No se promete identidad
-binaria entre compiladores o entornos diferentes. Los snapshots no incluyen Git.
+The source archive is separate from the runtime: own code, an upstream snapshot
+and vendored Cargo dependencies with notices. From its root,
+`bash packaging/rebuild-from-source.sh` rebuilds without installing, provided the
+native tools/dependencies are available. Binary identity across compilers or
+environments is not promised. Snapshots do not include Git metadata.
 
-## Inspección e instalación en la laptop
+## Inspection and installation on the laptop
 
-Primero revisa el archivo y los hashes, sin sudo:
+First inspect the package and hashes, without sudo:
 
 ```bash
 cd build/packages
@@ -64,106 +64,108 @@ dpkg-deb --info trama_0.1.0~alpha1_amd64.deb
 dpkg-deb --contents trama_0.1.0~alpha1_amd64.deb
 ```
 
-La siguiente orden **requiere sudo**. Ejecutarla instala el paquete y permite a
-APT resolver sus dependencias; el agente no la ejecuta:
+The following command **requires sudo**. It installs the package and lets APT
+resolve dependencies; the agent does not execute it:
 
 ```bash
 sudo apt install './trama_0.1.0~alpha1_amd64.deb'
 ```
 
-Luego, desde una terminal de tu sesión gráfica, sin sudo:
+Then, from a terminal in your graphical session, without sudo:
 
 ```bash
 trama --help
 trama /ruta/a/tu/perfil.toml
 ```
 
-La entrada de aplicaciones también solicita una terminal; no es una GUI. Su
-integración con el lanzador COSMIC debe comprobarse tras instalar.
+The application entry also requests a terminal; it is not a GUI. Integration with
+the COSMIC launcher must be checked after installation.
 
-## Helper KMS y permisos
+## KMS helper and permissions
 
-Solo el helper KMS requiere privilegios para la ruta de captura directa. Este
-paquete no incluye scripts de instalación que otorguen capacidades. Sin ellas,
-GSR utiliza su mecanismo upstream de autenticación con `pkexec`; debe existir
-un agente Polkit funcional en la sesión. Las consultas de dispositivos tienen
-un timeout: si la autenticación tarda demasiado, usa `u` para reintentarlas.
+Only the KMS helper needs privileges for direct capture. The package has no
+installation scripts granting capabilities. Without them, GSR uses upstream
+`pkexec` authentication; a working Polkit agent is required in the session.
+Device queries have a timeout: if authentication takes too long, press `u` to
+query again.
 
-Si se decide usar el mismo mecanismo de capacidades del instalador upstream,
-esta orden **requiere sudo** y debe ejecutarse explícitamente tras revisar el
-paquete; no se aplica al Python, plugin ni motor principal:
+To use the same capability mechanism as upstream's installer, the following
+command **requires sudo** and must be explicitly run after reviewing the package.
+It applies neither to Python, the plugin nor the main engine:
 
 ```bash
 sudo setcap cap_sys_admin+ep /usr/lib/trama/engine/gsr-kms-server
 ```
 
-Comprobación sin sudo:
+Check without sudo:
 
 ```bash
 getcap /usr/lib/trama/engine/gsr-kms-server
 ```
 
-La orden necesita `setcap` de `libcap2-bin`. Si falta, su instalación también
-requiere sudo:
+This needs `setcap` from `libcap2-bin`. Installing it, if missing, also requires sudo:
 
 ```bash
 sudo apt install libcap2-bin
 ```
 
-Una actualización puede reemplazar el helper y quitar su capacidad; vuelve a
-revisarla. El `.deb` no incluye setuid ni capacidades persistentes. Para revocar
-la capacidad manualmente:
+An update can replace the helper and remove its capability; check it again.
+The `.deb` contains neither setuid permissions nor persistent capabilities.
+To revoke the capability manually:
 
 ```bash
 sudo setcap -r /usr/lib/trama/engine/gsr-kms-server
 ```
 
-## Configuración y desinstalación
+## Configuration and removal
 
-Los TOML existentes se abren sin migración. La preferencia de idioma continúa en
-`$XDG_CONFIG_HOME/trama/ui.toml` y el último perfil conserva su ubicación histórica
-explicada en la [guía TUI](tui.md). No se escriben gráficos en perfiles personales.
+Existing TOML profiles open without migration. Language preference remains in
+`$XDG_CONFIG_HOME/trama/ui.toml`; last-profile state retains its historical
+location documented in the [TUI guide](tui.md). No graphics are written into
+personal profiles.
 
-Desinstalar requiere sudo y deja los perfiles/videos del usuario intactos:
+Removal requires sudo and leaves user profiles/videos intact:
 
 ```bash
 sudo apt remove trama
 ```
 
-## Verificar el paquete extraído sin instalar
+## Verify an extracted package without installing
 
 ```bash
 python3 tests/test_package.py
 ```
 
-La prueba extrae el `.deb` en una carpeta temporal y comprueba contenido/permisos,
-selección del motor privado, manifiesto, rechazo de helper alterado, ayuda,
-precarga con el decoder Rust, hashes y fuentes/avisos. No otorga permisos ni
-captura la pantalla. Se comprobó además la resolución Cargo offline de las fuentes
-vendorizadas y una simulación APT local que no instaló nada. El resolver de
-dependencias del host avisó sobre diversiones usr-merge; hay que comprobar APT
-también en el sistema objetivo antes de instalar. Para repetir la suite TUI:
+The test extracts the `.deb` into a temporary folder and checks contents,
+permissions, private-engine selection, manifest, tampered-helper rejection, help,
+preloading with the Rust decoder, hashes and sources/notices. It grants no
+permissions and does not capture the screen. Vendored-source Cargo resolution
+was also checked offline, alongside a local APT simulation that installed nothing.
+The host dependency resolver warned about usr-merge diversions; check APT on the
+target system before installing. To repeat the TUI suite:
 
 ```bash
 python3 -m unittest discover -s tests -p 'test_trama*.py'
 ```
 
-## Validación y pendientes
+## Validation and pending work
 
-El usuario ya confirmó que instaló el `.deb` y pudo grabar en su laptop.
-Además, las pruebas del runtime instalado y el recorrido inicial con estado
-limpio pasaron usando dispositivos/captura simulados. No se tocó su perfil.
-Los comandos están en [desarrollo](desarrollo.md#probar-la-versión-instalada-sin-usar-perfiles-personales).
+The [beta checklist](checklist-beta.md) covers a second PC, Mint or a VM, result
+recording and publication criteria.
 
-Antes de llamar estable al paquete faltan la entrada del lanzador COSMIC, una
-instalación limpia y más evidencia de estabilidad/rendimiento. Las pruebas
-simuladas no sustituyen la captura KMS ni el audio físico.
+The user confirmed installing the `.deb` and recording on their laptop. Installed
+runtime tests and the clean-state first-run flow also passed with simulated
+devices/capture. Their profile was not touched. Commands are in
+[development](desarrollo.md#test-the-installed-version-without-personal-profiles).
 
-El código propio, el icono, la mascota y el hero usan GPL-3.0-only por decisión
-del propietario, igual que GSR. El arte fue generado con ChatGPT y entregado para
-Trama; no se afirma autoría humana ni exclusividad.
-Los avisos originales de GSR y las dependencias se incluyen.
+Before calling the package stable, the COSMIC launcher entry, a clean installation
+and more stability/performance evidence remain to be checked. Simulated tests do
+not replace KMS capture or physical audio.
 
-Para actualizar GSR: revisar upstream y ABI, construir y probar motor/plugin,
-actualizar el commit esperado y regenerar manifiesto y paquete como conjunto.
-No descargar ni cambiar el motor automáticamente en la laptop del usuario.
+Own code, icon, mascot and hero use GPL-3.0-only by the owner's decision, matching
+GSR. Artwork was generated with ChatGPT and supplied for Trama; no human authorship
+or exclusivity is claimed. Original GSR and dependency notices are included.
+
+To update GSR: review upstream and ABI changes, build/test engine and plugin,
+update the expected commit, then regenerate manifest and package together.
+Never download or switch the engine automatically on the user's laptop.

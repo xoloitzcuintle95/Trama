@@ -1,75 +1,76 @@
-# Arquitectura del compositor
+# Compositor architecture
 
-## Componentes
+## Components
 
-- **Interfaz:** Python, TUI curses y CLI de texto. Configuración previa a grabar.
-- **Perfil:** un esquema TOML compartido por TUI, menú y comando directo.
-- **Composición:** plugin Rust `cdylib`, RGBA sobre el framebuffer de GSR.
-- **Motor:** GPU Screen Recorder nativo para captura, audio, codificación y archivo.
+- **Interface:** Python, curses TUI and text CLI. Configure before recording.
+- **Profile:** one TOML schema shared by the TUI, menu and direct command.
+- **Composition:** Rust `cdylib` plugin, rendering RGBA into GSR's framebuffer.
+- **Engine:** native GPU Screen Recorder for capture, audio, encoding and output.
 
 ```text
-TOML → validación Python → manifiesto temporal → precarga Rust
+TOML → Python validation → temporary manifest → Rust preload
                                                ↓
-Monitor → GSR/KMS → composición de capas GL/GLES → codificación GPU → MKV
-Micrófono → audio GSR ────────────────────────────────────────────────┘
-          → parec → nivel RMS atómico → estado reposo/habla
+Monitor → GSR/KMS → GL/GLES layer composition → GPU encoding → MKV
+Microphone → GSR audio ────────────────────────────────────────┘
+           → parec → atomic RMS level → idle/talking state
 ```
 
-La API usada es la cabecera de plugins 0.1 del commit GSR
-`f97d1e392816503282d20a0804c3ce3fd2943767`, versión 6.1.7. No se modifica el núcleo
-de GSR. El build compara layouts C/Rust y registra hashes del motor/plugin.
-No basta con encontrar otro ejecutable que diga 6.1.7.
+The API is plugin header 0.1 from GSR commit
+`f97d1e392816503282d20a0804c3ce3fd2943767`, version 6.1.7. GSR's core is not
+modified. The build compares C/Rust layouts and records engine/plugin hashes.
+Finding another executable that reports 6.1.7 is not sufficient.
 
-La TUI es el único hilo que llama curses. Las consultas y la grabación trabajan
-fuera de él. El grabador compartido conserva parada SIGINT y espera de cierre;
-la TUI lo controla con un evento, sin otra implementación de captura.
+Only the TUI thread calls curses. Queries and recording run outside that thread.
+The shared recorder preserves SIGINT shutdown and waits for file finalization;
+the TUI controls it through an event, without a separate capture implementation.
 
-## Capas y avatar
+## Layers and avatar
 
-Tipos concretos, sin framework genérico: gráfico PNG/JPG/GIF o avatar con dos GIF.
-La configuración se resuelve en init; no hay lectura de archivos, decodificación
-ni parseo en draw. El escalado cambia el quad GPU, no los píxeles precargados.
+Concrete types, without a generic framework: a PNG/JPG/GIF graphic, or an avatar
+with two GIFs. Configuration is resolved during init; draw performs no file reads,
+decoding or parsing. Scaling changes the GPU quad, not the preloaded pixels.
 
-Se conserva transparencia y se mezcla con alfa premultiplicado. Los GIF usan
-reloj monotónico, tiempos/disposal/bucles del archivo y caché completa acotada.
-Una demora nula/ausente usa 100 ms; una animación finita mantiene su último cuadro.
-Al cambiar de estado del avatar se reinicia el reloj del GIF entrante.
+Transparency is preserved with premultiplied alpha blending. GIFs use a monotonic
+clock, file timings/disposal/loops and a bounded full-frame cache. A missing/zero
+delay uses 100 ms; a finite animation holds its last frame. Changing avatar state
+restarts the incoming GIF's clock.
 
-El detector mide amplitud, no reconoce voz. `parec` produce mono float32 a 16 kHz;
-un hilo calcula RMS en bloques de 20 ms y publica booleanos atómicos. La misma
-entrada resuelta se pasa a GSR y al detector, pero son **dos capturas**. GSR
-mantiene los relojes del audio grabado; el detector no toca sus buffers.
+The detector measures amplitude; it does not recognize speech. `parec` produces
+mono float32 at 16 kHz; a thread computes RMS in 20 ms blocks and publishes atomic
+booleans. The same resolved input goes to GSR and the detector, but these are
+**two captures**. GSR maintains recorded-audio clocks; the detector does not
+access its buffers.
 
-Ocultar conserva recursos cargados y no dibuja. No libera toda la memoria ni
-permite una fuente inválida. No hay cambios de escenas ni edición en vivo.
+Hiding a layer keeps its resources loaded and skips drawing. It neither releases
+all memory nor permits an invalid source. There are no scene changes or live edits.
 
-## Límites
+## Limits
 
-| Recurso | Límite |
+| Resource | Limit |
 | --- | --- |
-| Capas / avatar | 16 capas, hasta un avatar |
-| Perfil / manifiesto | 128 KiB cada uno |
-| Archivo comprimido | 8 MiB por fuente |
-| Dimensión de fuente | 1..4096 por eje, sujeto al límite RGBA |
-| Imagen / caché GIF | 16 MiB por fuente |
-| GIF | Hasta 1024 cuadros, temporales gestionados hasta 8 MiB |
-| Escena precargada | 64 MiB RGBA, incluidos ocultos y ambos GIF del avatar |
-| Composición | SDR 8 bits |
+| Layers / avatar | 16 layers, at most one avatar |
+| Profile / manifest | 128 KiB each |
+| Compressed file | 8 MiB per source |
+| Source dimension | 1..4096 per axis, subject to the RGBA limit |
+| Image / GIF cache | 16 MiB per source |
+| GIF | Up to 1024 frames; managed temporaries up to 8 MiB |
+| Preloaded scene | 64 MiB RGBA, including hidden layers and both avatar GIFs |
+| Composition | 8-bit SDR |
 
-Estos límites no son un techo de RSS: GSR, texturas, allocator, decoders y driver
-consumen aparte. Un rechazo puede ocurrir tras decodificar una capa adicional.
-No se deduplican fuentes repetidas. PNG/JPG liberan RGBA CPU tras el upload.
+These limits are not an RSS ceiling: GSR, textures, the allocator, decoders and
+the driver use additional memory. Rejection may occur after decoding another
+layer. Repeated sources are not deduplicated. PNG/JPG release CPU RGBA after upload.
 
-La fuente JPEG se convierte a RGB/Luma y después a RGBA opaco. No se promete
-color ICC ni orientación EXIF automática. El renderizador conserva el contexto,
-hilo y estado GL del host; un fallo desactiva la instancia y queda en el log.
-No es un sandbox: plugin y GSR comparten proceso.
+JPEG is converted to RGB/Luma, then opaque RGBA. ICC color handling and automatic
+EXIF orientation are not promised. The renderer preserves the host's GL context,
+thread and state; an error disables the instance and is logged. This is not a
+sandbox: the plugin and GSR share a process.
 
-## Código y contratos
+## Code and contracts
 
-- [CLI y grabador compartido](../scripts/compositor.py).
-- [TUI](../scripts/trama_tui.py) y [modelo](../scripts/trama_model.py).
-- [Perfil](../scripts/compositor_profile.py) y [dispositivos](../scripts/compositor_devices.py).
-- [Escena Rust](../rust/src/scene.rs), [media](../rust/src/media.rs) y [render](../rust/src/render.rs).
-- [Contrato unsafe, ABI y OpenGL](../rust/SAFETY.md).
-- [Desarrollo y pruebas](desarrollo.md).
+- [CLI and shared recorder](../scripts/compositor.py).
+- [TUI](../scripts/trama_tui.py) and [model](../scripts/trama_model.py).
+- [Profile](../scripts/compositor_profile.py) and [devices](../scripts/compositor_devices.py).
+- Rust [scene](../rust/src/scene.rs), [media](../rust/src/media.rs) and [renderer](../rust/src/render.rs).
+- [Unsafe, ABI and OpenGL contract](../rust/SAFETY.md).
+- [Development and testing](desarrollo.md).

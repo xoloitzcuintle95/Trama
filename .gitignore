@@ -34,3 +34,6 @@ __pycache__/
 /.codex/
 .vscode/
 .idea/
+
+# Flatpak builder local state (manifests and sources remain under packaging/).
+/.flatpak-builder/

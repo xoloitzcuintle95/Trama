@@ -1,43 +1,42 @@
-# Construcción y pruebas
+# Building and testing
 
-La instalación nativa de GSR y los requisitos de Pop!_OS se describen en el
-[manual](guia-cli.md#2-instalación-y-requisitos). El [paquete preliminar](paquete-preliminar.md) se construye localmente; aún requiere
-validación instalado antes de publicarlo.
+Native GSR installation and Pop!_OS requirements are covered in the
+[manual](guia-cli.md#2-installation-and-requirements). The [preliminary package](paquete-preliminar.md)
+is built locally; installed-package validation is required before publication.
 
-## Estructura
+## Structure
 
-| Directorio | Uso |
+| Directory | Purpose |
 | --- | --- |
-| `rust/` | Plugin, decodificación, animación, ABI y render |
-| `scripts/` | CLI/TUI, build, pruebas y mediciones |
-| `tests/` | Pruebas y adaptadores simulados |
-| `examples/` | Perfil y gráficos geométricos neutros |
-| `assets/brand/` | Icono, mascota y hero entregados para Trama |
-| `packaging/` | Entrada de aplicaciones, avisos y reconstrucción de fuentes |
-| `src/` | Referencia C de desarrollo para contrastar comportamiento |
-| `third_party/gpu-screen-recorder/` | Checkout oficial de GSR separado y fijado |
-| `build/` | Artefactos generados; no es código fuente |
+| `rust/` | Plugin, decoding, animation, ABI and rendering |
+| `scripts/` | CLI/TUI, builds, checks and measurements |
+| `tests/` | Tests and simulated adapters |
+| `examples/` | Profile and neutral geometric assets |
+| `assets/brand/` | Icon, mascot and hero supplied for Trama |
+| `packaging/` | Application entry, notices and source rebuild script |
+| `src/` | Development C reference for independent behavior comparisons |
+| `third_party/gpu-screen-recorder/` | Separate, pinned official GSR checkout |
+| `build/` | Generated artifacts, not source code |
 
-La referencia C es una herramienta de prueba, no el plugin que usa la TUI.
-Conservarla cuesta unas decenas de KiB de fuente y permite pruebas independientes.
-No se necesita una GUI de GSR.
+The C reference is a testing tool, not the plugin used by the TUI. Keeping its
+few dozen KiB of source enables independent tests. GSR's GUI is not required.
 
-## Compilar
+## Build
 
-El build exige el commit GSR esperado y su binario local. Las dependencias Cargo
-quedan fijadas en el lockfile. La primera vez puede requerir acceso a red:
+The build requires the expected GSR commit and local binary. Cargo dependencies
+are pinned in the lockfile. Initial setup may require network access:
 
 ```bash
 cargo fetch --manifest-path rust/Cargo.toml --locked
 bash scripts/build-rust-overlay.sh
 ```
 
-El script genera plugin, verificadores y manifiesto en `build/`. Remapea rutas
-de fuente del build Rust para no incrustar el directorio personal de compilación.
-El GSR instalado debe coincidir con el binario local registrado. No se instala
-ni actualiza el motor automáticamente.
+The script produces the plugin, validators and manifest in `build/`. Rust source
+paths are remapped so the personal build directory is not embedded. Installed
+GSR must match the recorded local binary. The engine is not installed or updated
+automatically.
 
-## Verificar desde fuentes
+## Verify from source
 
 ```bash
 bash scripts/check-rust-overlay.sh
@@ -46,72 +45,71 @@ python3 tests/test_trama_pty.py
 python3 scripts/check-source.py
 ```
 
-La primera orden prepara la referencia C y sus oráculos, compila Rust, compara
-la ABI y ejecuta unidades, oráculos GIF, GL offscreen y CLI. El artefacto con
-`test-hooks` se construye aparte y no reemplaza el plugin de producción. La suite
-ya no depende de un binario C antiguo de una máquina concreta: su manifiesto
-registra el binario y los hashes de las fuentes de esta compilación.
+The first command prepares the C reference and oracles, builds Rust, compares the
+ABI and runs unit, GIF oracle, offscreen GL and CLI checks. The `test-hooks`
+artifact is built separately and never replaces the production plugin. The suite
+no longer relies on an old C binary from a particular machine: its manifest
+records the binary and source hashes for this build.
 
-Las pruebas TUI usan una pseudoterminal real y un capturador simulado. El caso de
-30 segundos espera ese tiempo y genera un MKV sintético; no captura el escritorio.
-Los ejemplos no leen perfiles locales del desarrollador. Los recursos grandes
-para comprobar presupuestos se generan dentro del directorio temporal del test.
+TUI tests use a real pseudoterminal with a simulated capture process. The
+30-second case waits that long and produces a synthetic MKV, not a desktop
+capture. Examples do not read the developer's local profiles. Large budget-test
+assets are generated inside each test's temporary directory.
 
-Pillow y FFmpeg son necesarios para la suite. Para Clippy:
+Pillow and FFmpeg are required by the suite. To run Clippy:
 
 ```bash
 CARGO_TARGET_DIR=build/rust-target cargo clippy --manifest-path rust/Cargo.toml \
   --offline --locked --all-targets --all-features -- -D warnings
 ```
 
-Si quieres regenerar los ejemplos geométricos:
+To regenerate the geometric examples:
 
 ```bash
 python3 scripts/create-example-assets.py
 ```
 
-## Archivos privados y generados
+## Private and generated files
 
-Mantén perfiles, gráficos personales y videos fuera del proyecto. Se admiten
-rutas absolutas y perfiles con rutas relativas a su propia carpeta. La TUI guarda
-solo el puntero al último perfil en el estado XDG del usuario.
+Keep personal profiles, graphics and videos outside the project. Absolute paths
+and paths relative to a profile's own folder are supported. The TUI stores only
+a pointer to the last profile in the user's XDG state directory.
 
-El `.gitignore` excluye builds, grabaciones, perfiles locales, cachés, logs y
-archivos de entorno. Eso ayuda a no incorporarlos a Git, pero no reemplaza una
-revisión antes de publicar. Los avisos y licencias de dependencias oficiales no
-son datos personales del desarrollador y deben conservarse.
+`.gitignore` excludes builds, recordings, local profiles, caches, logs and
+environment files. This helps keep them out of Git but does not replace a
+pre-publication review. Official dependency licenses and notices are not the
+developer's personal data and must be retained.
 
-Se pueden borrar las cachés `rust/target/`, los targets de compilación y registros
-cuando no se usan. Para ejecutar sin recompilar, hacen falta al menos
-`build/overlay-rust.so`, `build/overlay-rust.build.json` y los verificadores
-`scene-check`/`element-check` en el target release. La suite vuelve a generar los
-artefactos de prueba. No se borra el build local de GSR que necesita el manifiesto.
+Unused `rust/target/` caches, build targets and logs may be removed. Running
+without rebuilding needs at least `build/overlay-rust.so`,
+`build/overlay-rust.build.json` and the release `scene-check`/`element-check`
+validators. The suite regenerates test artifacts. Keep the local GSR build
+required by the manifest.
 
-La copia local puede conservar solo los ejecutables de GSR y haber descartado
-sus metadatos de Meson/Ninja. En ese caso usa `bash scripts/prepare-gsr.sh` para
-configurar y compilar el motor de nuevo, antes de intentar `meson compile`.
+A local copy may retain only GSR's executables after Meson/Ninja metadata was
+removed. In that case run `bash scripts/prepare-gsr.sh` to configure and build
+the engine again before trying `meson compile`.
 
-## Paquete de evaluación local
+## Local evaluation package
 
 ```bash
 python3 scripts/build-deb.py
 ```
 
-Crea `.deb`, fuentes separadas y hashes en `build/packages/`. No hace instalación
-ni copia archivos a `/usr`. La lista de módulos/artefactos es explícita: no se
-empaqueta el árbol de trabajo entero. Incluye motor y helper GSR privados y una
-copia de los avisos de Cargo. Las dependencias ELF se obtienen con
-`dpkg-shlibdeps`; drivers y herramientas del sistema no se incluyen en el archivo.
+This creates a `.deb`, separate sources and hashes in `build/packages/`. It does
+not install anything or copy files to `/usr`. An explicit module/artifact list is
+used rather than packaging the whole working tree. It includes a private GSR
+engine/helper and Cargo dependency notices. ELF dependencies are obtained through
+`dpkg-shlibdeps`; system drivers and tools are not bundled.
 
-El runtime conserva la disposición de rutas de los verificadores para reutilizar
-el loader actual. `Devices` prioriza el motor privado solo si existe `engine/`;
-desde fuentes conserva la búsqueda en PATH. El paquete verifica también helper
-y validador. Los permisos KMS e instalación se explican en la
-[guía específica](paquete-preliminar.md#helper-kms-y-permisos).
+The runtime preserves validator paths to reuse the existing loader. `Devices`
+prioritizes the private engine only when `engine/` exists; source execution keeps
+PATH lookup. The package also verifies the helper and validator. Installation
+and KMS permissions are covered in the [package guide](paquete-preliminar.md#kms-helper-and-permissions).
 
-## Probar la versión instalada sin usar perfiles personales
+## Test the installed version without personal profiles
 
-Después de instalar el paquete por separado:
+After installing the package separately:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 tests/test_installed.py
@@ -119,18 +117,18 @@ TRAMA_TEST_RUNTIME=/usr/lib/trama PYTHONDONTWRITEBYTECODE=1 python3 tests/test_t
 PYTHONDONTWRITEBYTECODE=1 python3 tests/test_package.py
 ```
 
-`test_installed.py` comprueba que los módulos/binarios instalados coinciden con
-el `.deb` local y ejecuta el lanzador/loader/modelo instalados con HOME, XDG y
-perfiles temporales. Prueba formatos, capas y errores sin capturar dispositivos.
-Necesita Pillow solo para crear un JPG de prueba, no para ejecutar Trama.
+`test_installed.py` checks that installed modules/binaries match the local `.deb`
+and runs the installed launcher/loader/model with temporary HOME, XDG directories
+and profiles. It tests formats, layers and errors without capturing devices.
+Pillow is needed only to generate a test JPG, not to run Trama.
 
-`TRAMA_TEST_RUNTIME` solo lo interpreta el adaptador de `tests/`: permite probar
-la TUI instalada en pseudoterminal con pantalla/micrófono/capturador simulados.
-No existe esa opción de sustitución del motor en el comando de producción.
-Incluye primera ejecución sin argumentos ni estado previo, guardado y prueba de
-30 segundos con MKV sintético. No acredita captura KMS, audio físico ni reacción
-real del micrófono. Todos los ajustes se guardan en directorios temporales.
+Only the adapter in `tests/` interprets `TRAMA_TEST_RUNTIME`: it tests the installed
+TUI in a pseudoterminal with simulated display, microphone and recorder. The
+production command has no equivalent engine-override option. Tests include first
+run without arguments or prior state, saving, and a 30-second synthetic MKV.
+They do not validate KMS capture, physical audio or actual microphone response.
+All settings are stored in temporary directories.
 
-Estas pruebas no instalan, actualizan ni otorgan capacidades y no requieren sudo.
-La coincidencia con el `.deb` local puede fallar si se instaló otra compilación;
-ese resultado identifica una diferencia de versión, no autoriza a reinstalarla.
+These tests do not install, update or grant capabilities and need no sudo.
+Comparison against the local `.deb` can fail when a different build is installed;
+that identifies a version mismatch and does not authorize reinstalling it.

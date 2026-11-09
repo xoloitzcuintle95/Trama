@@ -1,184 +1,175 @@
-# Investigación: presentación de la TUI y capacidades de GSR
+# Research: TUI presentation and GSR capabilities
 
-La primera mejora visual sobre curses y la vista estática de grabación ya están
-implementadas; véase la [guía actual de la TUI](tui.md). Las capacidades nuevas
-de GSR siguen siendo propuestas, no funciones habilitadas. Wayland/COSMIC es el
-objetivo de soporte; las restricciones X11 se documentan para no prometer modos
-que no funcionan en esa plataforma.
+The first curses visual improvements and static recording view are implemented;
+see the [current TUI guide](tui.md). New GSR capabilities remain proposals, not
+enabled features. Wayland/COSMIC is the support target; X11 restrictions are
+documented to avoid promising modes unavailable on that platform.
 
-Alcance: investigación y propuesta, sin migración de biblioteca, instalación de
-paquetes ni cambios a captura. Referencia local: GSR 6.1.7, commit
-`f97d1e392816503282d20a0804c3ce3fd2943767`, plugin Rust SDR actual.
+Scope: research/proposal, without library migration, package installation or
+capture changes. Local reference: GSR 6.1.7, commit
+`f97d1e392816503282d20a0804c3ce3fd2943767`, current SDR Rust plugin.
 
-## Diagnóstico visual original (antes del rediseño)
+## Original visual diagnosis (before redesign)
 
-La pantalla anterior usaba posiciones fijas y texto casi monocromo. Su pie contiene
-unas veinte acciones mezcladas en varias líneas, aunque muchas no tengan relación
-con el campo seleccionado. Agregar más opciones ahí empeoraría la navegación.
+The previous screen used fixed positions and nearly monochrome text. Its footer
+mixed about twenty actions across several lines even when unrelated to the
+selected field. Adding options there would worsen navigation.
 
-Una presentación más clara no depende solo de colores:
+Clearer presentation is not only about colors:
 
-- Separar Captura, Capas, Audio, Salida y Avanzado.
-- Mantener estado y perfil en una cabecera breve.
-- Dar a Grabar y Prueba 30 s una zona visible de acciones principales.
-- Usar paneles con títulos, márgenes y valores alineados.
-- Mostrar propiedades de la capa seleccionada junto al listado.
-- Mantener un pie de cuatro o cinco atajos **contextuales**; mover el resto a
-  Ayuda o a un menú de acciones.
-- Tab/Shift+Tab para foco, flechas para listas y Enter para editar; no interceptar
-  letras de un campo de texto como órdenes de grabación.
-- Usar un acento de color, estados con texto y color, buen contraste y fallback
-  monocromo. Los símbolos no deben ser el único indicador de un error.
-- Reorganizar paneles en una columna cuando el terminal sea estrecho, con scroll.
+- Separate Capture, Layers, Audio, Output and Advanced.
+- Keep status/profile in a short header.
+- Give Record and 30-second test visible primary-action space.
+- Use titled panels, margins and aligned values.
+- Show selected-layer properties beside the list.
+- Keep four/five **contextual** footer shortcuts; move others to Help/actions.
+- Use Tab/Shift+Tab for focus, arrows for lists and Enter to edit; text-field
+  letters must not trigger recording shortcuts.
+- Use accent color, text+color states, contrast and monochrome fallback. Symbols
+  must not be the only error indication.
+- Reflow to a scrollable single column in narrow terminals.
 
-Boceto conceptual, no una pantalla implementada:
+Concept sketch, not an implemented screen:
 
 ```text
- COMPOSITOR                              Perfil: sesión · Listo
- Captura     Capas     Audio     Salida     Avanzado
+ COMPOSITOR                              Profile: session · Ready
+ Capture     Layers     Audio     Output     Advanced
 
- ┌ Captura ───────────────────┐ ┌ Video ──────────────────────┐
- │ Monitor seleccionado       │ │ H.264 · GPU · 30 FPS        │
- │ Resolución del lienzo      │ │ MKV · calidad alta          │
+ ┌ Capture ──────────────────┐ ┌ Video ──────────────────────┐
+ │ Selected monitor          │ │ H.264 · GPU · 30 FPS        │
+ │ Canvas resolution         │ │ MKV · high quality          │
  └───────────────────────────┘ └────────────────────────────┘
- ┌ Capas ─────────────────────┐ ┌ Propiedades ────────────────┐
- │ ● Avatar                   │ │ Esquina inferior derecha   │
- │ ● Imagen                   │ │ Caja 300 px · margen 20    │
+ ┌ Layers ───────────────────┐ ┌ Properties ─────────────────┐
+ │ ● Avatar                  │ │ Bottom-right corner         │
+ │ ● Image                   │ │ Box 300 px · margin 20      │
  └───────────────────────────┘ └────────────────────────────┘
- Carpeta: …                    Nombre: sesión-{timestamp}.mkv
+ Folder: …                     Name: session-{timestamp}.mkv
 
- [ Grabar ]      [ Prueba 30 s ]      [ Guardar ]
- Tab Navegar     Enter Editar     ? Ayuda     q Salir
+ [ Record ]      [ 30 s test ]      [ Save ]
+ Tab Navigate    Enter Edit     ? Help     q Quit
 ```
 
-## Bibliotecas investigadas
+## Libraries investigated
 
-| Opción | Ventaja | Coste o límite |
+| Option | Benefit | Cost or limitation |
 | --- | --- | --- |
-| curses actual | Sin nuevas dependencias; se conserva el código y la integración de terminal probada | Layout, foco, widgets y estilos se mantienen manualmente |
-| prompt_toolkit | Layouts, entradas, estilos y keybindings para aplicaciones completas | Nueva dependencia y adaptación de eventos; el diseño visual sigue siendo nuestro |
-| Textual | CSS, paneles, tablas, árbol de archivos, foco y footer contextual; workers y pruebas headless | Más dependencias y migración de la capa visual; coste de memoria/CPU pendiente de medir |
+| Current curses | No new dependencies; retains code and tested terminal integration | Manual layout, focus, widgets and styling |
+| prompt_toolkit | Layouts, inputs, styles and keybindings for full applications | New dependency/event adaptation; visual design still ours |
+| Textual | CSS, panels, tables, file tree, focus/context footer, workers and headless tests | More dependencies and visual-layer migration; CPU/memory cost unmeasured |
 
-En el entorno inspeccionado: curses disponible, Rich 13.7.1 instalado;
-Textual y prompt_toolkit no instalados. No se instaló ninguna biblioteca. Una
-versión global ya instalada no constituye una decisión de dependencia del proyecto.
+Inspected environment: curses available, Rich 13.7.1 installed; Textual and
+prompt_toolkit absent. No library was installed. A globally available version
+does not constitute a project dependency decision.
 
-Recomendación inmediata: **rediseñar curses primero** para resolver jerarquía,
-foco y pie de acciones sin cambiar el grabador. Los problemas concretos de hoy
-no requieren una migración. Si la expansión exige mantener demasiados widgets
-propios, comparar un prototipo de Textual antes de comprometer el cambio.
+Immediate recommendation: **redesign curses first**, addressing hierarchy, focus
+and actions without changing recording. Current issues do not require migration.
+If growth demands too many custom widgets, compare a Textual prototype before
+committing to a change.
 
-Textual es una alternativa real para crecer, no una promesa de menor consumo.
-El prototipo tendría que conservar TOML/backend/plugin y comparar arranque,
-respuesta al teclado, memoria de la TUI, tamaño de dependencias y recursos del
-conjunto al grabar. Una interfaz y un motor distintos no deben cambiar a la vez
-si queremos atribuir una regresión.
+Textual is a viable growth option, not a promise of lower usage. A prototype
+would preserve TOML/backend/plugin and compare startup, keyboard response, TUI
+memory, dependency size and total recording resources. Do not change interface
+and engine together if regressions must be attributable.
 
-Fuentes primarias:
+Primary sources:
 
-- [curses: colores, ventanas y terminal](https://docs.python.org/3/library/curses.html).
-- [prompt_toolkit: aplicaciones de pantalla completa](https://python-prompt-toolkit.readthedocs.io/en/stable/pages/full_screen_apps.html).
-- [Textual: layouts](https://textual.textualize.io/guide/layout/),
-  [widgets](https://textual.textualize.io/widget_gallery/) y
-  [footer ligado al foco](https://textual.textualize.io/widgets/footer/).
-- [Textual: workers](https://textual.textualize.io/guide/workers/) y
-  [pruebas de teclado, clic y tamaño de pantalla](https://textual.textualize.io/guide/testing/).
+- [curses: colors, windows and terminals](https://docs.python.org/3/library/curses.html).
+- [prompt_toolkit: full-screen applications](https://python-prompt-toolkit.readthedocs.io/en/stable/pages/full_screen_apps.html).
+- Textual [layouts](https://textual.textualize.io/guide/layout/),
+  [widgets](https://textual.textualize.io/widget_gallery/) and
+  [focus-sensitive footer](https://textual.textualize.io/widgets/footer/).
+- Textual [workers](https://textual.textualize.io/guide/workers/) and
+  [keyboard, click and screen-size testing](https://textual.textualize.io/guide/testing/).
 
-## Qué podemos exponer del motor fijado
+## What the pinned engine can expose
 
-La ayuda general no demuestra que una característica esté compilada o disponible
-en una sesión. Se contrastaron manual y código local con las opciones de build
-del proyecto. Las filas siguientes son viabilidad de integración, **no pruebas
-nuevas de grabación con esos modos**.
+General help does not prove a feature is compiled or available in a session.
+Local manual/code were checked against project build options. The table is about
+integration feasibility, **not new recordings validating these modes**.
 
-| Capacidad | Evidencia y condición | Trabajo del compositor |
+| Capability | Evidence and condition | Compositor work |
 | --- | --- | --- |
-| Monitor | Ya integrado | Conservar el flujo probado |
-| Región | `-w region`/`-region`, backend de monitor; transforma coordenadas y escala de pantalla | Selección/configuración, validación y lienzo de salida correcto |
-| Codec, calidad, bitrate y contenedor | El motor tiene opciones; `--info` anuncia codecs/containers del equipo | Quitar constantes H.264/very_high/MKV, filtrar combinaciones y conservar defaults |
-| Resolución y cursor | `-s` limita resolución preservando proporción; `-cursor` controla el puntero | Recalcular lienzo y colocación; no asumir que `-s` fija exactamente W×H en todo modo |
-| Pausa | SIGUSR2 o IPC para grabación normal; no aplicable como pausa de replay/streaming | Estado confirmado del motor y política para el reloj del GIF |
-| Replay | `-r`, RAM/disco, guardar con señal o IPC | Duración/bitrate/presupuesto, múltiples archivos guardados y ruta devuelta por GSR |
-| Streaming | GSR admite destino de red y muxer apropiado | Configuración específica, estado de conexión y protección de claves |
-| Grabar durante replay/streaming | `-ro`, control SIGRTMIN o IPC y destinos del encoder compartidos | Integrar controles y recoger archivos; probar plugin/audio y consumo |
-| Ventana y foco | Solo sesión X11 pura; código rechaza Wayland/Xwayland | Mostrar solo donde funciona; no prometerlo en COSMIC |
-| Portal | Desactivado por `-Dportal=false` en nuestro build | Recompilar motor y validar el portal de COSMIC; no es una casilla de TUI suficiente |
-| Audio por aplicación | Desactivado por `-Dapp_audio=false`; consulta es condicional en el código | Recompilar con dependencias correspondientes y probar PipeWire |
-| Cámara V4L2 | Lista modos y acepta cámara como fuente, incluso combinada con otras | Permisos, formato, FPS, ocupación del dispositivo y layout de fuentes; distinto de una capa GIF |
-| HDR/10 bits | GSR tiene modos; plugin actual rechaza color depth distinto de SDR 8 bits | Cambios/pruebas de color, formatos y mezcla del plugin; mantener desactivado por ahora |
-| Solo audio | GSR lo admite sin fuente de video | Modo independiente, sin compositor/overlays de video; adaptar comprobación final |
+| Monitor | Already integrated | Preserve tested flow |
+| Region | `-w region`/`-region`, monitor backend; transforms screen coordinates/scaling | Selection/configuration, validation and correct output canvas |
+| Codec, quality, bitrate and container | Engine options exist; `--info` advertises local codecs/containers | Replace H.264/very_high/MKV constants, filter combinations, retain defaults |
+| Resolution and cursor | `-s` limits resolution while preserving aspect; `-cursor` controls pointer | Recalculate canvas/placement; do not assume exact W×H in every mode |
+| Pause | SIGUSR2 or IPC in normal recording; not replay/stream pause | Confirmed engine state and GIF clock policy |
+| Replay | `-r`, RAM/disk, save via signal or IPC | Duration/bitrate/budget, multiple saves and GSR-returned paths |
+| Streaming | Network destination with appropriate muxer supported | Specific configuration, connection state and protected keys |
+| Record during replay/streaming | `-ro`, SIGRTMIN/IPC control and shared encoder destinations | Controls/output collection; validate plugin/audio/resource use |
+| Window and focus | Pure X11 only; code rejects Wayland/Xwayland | Expose only where valid; no COSMIC promise |
+| Portal | Disabled with `-Dportal=false` | Rebuild engine and validate COSMIC portal; a TUI toggle is insufficient |
+| Per-app audio | Disabled with `-Dapp_audio=false`; enumeration conditional in code | Rebuild with dependencies and test PipeWire |
+| V4L2 camera | Enumerates modes and accepts camera sources, including combinations | Permissions, formats, FPS, device availability and source layout; not a GIF layer |
+| HDR/10-bit | Engine supports modes; plugin rejects depth other than 8-bit SDR | Plugin color/format/blending changes and tests; keep disabled now |
+| Audio only | Engine supports no video source | Separate mode without video overlays; adapt final validation |
 
-Las capacidades de codec dependen también de GPU y driver. No se asume que
-AV1/HEVC se puedan codificar porque exista la opción o el decodificador.
-La combinación de monitores de distintas GPU tiene limitaciones explícitas en
-el código del motor y no se declara soportada por nuestra integración.
+Codec capability also depends on GPU/driver. An option or decoder does not prove
+AV1/HEVC encoding works. Combining monitors on different GPUs has explicit engine
+limits and is not declared supported by this integration.
 
-### Hallazgos que condicionan la implementación
+### Findings that constrain implementation
 
-1. **Pausa y GIF:** nuestro reloj es monotónico de tiempo real y no recibe el estado
-   de pausa de GSR. Al retomar podría avanzar de fase. Hay que elegir y probar
-   «continúa en tiempo real» o «congelar animaciones»; no prometer lo segundo con
-   solo enviar una señal al motor.
-2. **Replay:** SIGINT termina sin guardar automáticamente el búfer. El grabador
-   actual espera un solo MKV al acabar; esa política no sirve para replay. Deben
-   aparecer acciones separadas «Guardar últimos N segundos» y «Detener búfer».
-3. **Streaming con archivo local:** el soporte existe en este commit, tanto en
-   documentación como en `recorder.c`. No hace falta inventar dos instancias por
-   defecto. Compartir captura/encoder es una capacidad del motor; falta validarlo
-   con nuestra integración y medirlo en el equipo objetivo.
-4. **Protocolos:** FFmpeg local es 6.1.1. Su listado anuncia salida RTMP, RTMPS,
-   SRT, HTTP y HTTPS; no anuncia muxer WHIP. El manual exige FFmpeg 8 o posterior
-   para WHIP. Estos listados no prueban una conexión ni una cuenta de servicio.
-5. **Claves:** el informe actual registra comando/destino completos para archivos.
-   Antes de destinos de red debe ocultar claves/credenciales y evitar guardarlas
-   en perfiles públicos. No usar el informe actual sin revisar para streaming.
-6. **Coordenadas:** región o escalado modifican el video de salida; las esquinas
-   deben usar ese lienzo, no siempre las dimensiones nativas del monitor.
+1. **Pause/GIF:** our monotonic real-time clock receives no GSR pause state.
+   Resuming may advance animation phase. Choose/test real-time continuation versus
+   frozen animation; merely signaling GSR does not establish the latter.
+2. **Replay:** SIGINT exits without automatically saving the buffer. The current
+   recorder expects one final MKV, unsuitable for replay. Save last N seconds and
+   Stop buffer must be separate actions.
+3. **Streaming with local output:** this commit supports it in docs and
+   `recorder.c`; two instances need not be the default. Shared capture/encoding is
+   an engine capability still needing integration validation and target measurements.
+4. **Protocols:** local FFmpeg 6.1.1 advertises RTMP, RTMPS, SRT, HTTP and HTTPS
+   output, not a WHIP muxer. The manual requires FFmpeg 8+ for WHIP. Enumeration
+   does not validate a connection or service account.
+5. **Keys:** file reports currently record full commands/destinations. Network
+   output needs key/credential redaction and must avoid public profiles. Do not
+   reuse current reporting for streaming without review.
+6. **Coordinates:** region/scaling changes output video. Corner placement must
+   use that canvas rather than always native monitor dimensions.
 
-La documentación oficial también describe las rutas de
-[replay, streaming y grabación simultánea](https://git.dec05eba.com/gpu-screen-recorder/about/).
-No se ha hecho una emisión ni una prueba nueva de dispositivos en esta investigación.
+Official docs also cover [replay, streaming and concurrent recording](https://git.dec05eba.com/gpu-screen-recorder/about/).
+No stream or new device test was performed during this research.
 
-## Organización de opciones y entregas propuestas
+## Option organization and proposed deliveries
 
-Separar dos elecciones en la interfaz:
+Separate two choices:
 
-- **Fuente:** monitor, región, ventana donde se soporte, portal donde esté
-  habilitado, cámara.
-- **Modo de salida:** grabación normal, replay, transmisión; grabación local
-  adicional solo en los modos del motor que lo permitan.
+- **Source:** monitor, region, supported window, enabled portal or camera.
+- **Output mode:** normal recording, replay or streaming, with additional local
+  recording only where the engine permits it.
 
-Capas, audio y calidad se configuran en secciones propias. Opciones no disponibles
-se ocultan o muestran desactivadas con la razón (compilación, sesión, GPU o plugin).
-La TUI obtiene capacidades del motor/build y del entorno; no mantiene un listado
-optimista basado solo en la ayuda de GSR.
+Layers, audio and quality belong in their own sections. Unavailable options
+should be hidden or disabled with a reason (build, session, GPU or plugin).
+Capabilities come from engine/build/environment, not an optimistic help-only list.
 
-El TOML debe evolucionar con migración explícita y defaults compatibles: un perfil
-actual con `screen` se conserva como captura de monitor y grabación normal.
-No añadir un campo libre que envíe argumentos de shell sin validar al motor.
+Evolve TOML through explicit migration and compatible defaults: existing `screen`
+profiles remain monitor capture/normal recording. Do not introduce an unchecked
+free-text field sending shell arguments to the engine.
 
-Orden recomendado:
+Recommended order:
 
-1. Rediseño visual y navegación contextual, conservando funciones actuales.
-2. Opciones de video/salida y captura de región, con pruebas del lienzo/overlays.
-3. Pausa y replay, con control del motor y comprobación de resultados por modo.
-4. Streaming y grabación simultánea, con credenciales seguras y prueba real.
-5. Backend opcionales como cámara, X11/portal/audio por app según necesidad.
-6. HDR únicamente tras resolver el recorrido de color del plugin.
+1. Visual redesign/context navigation, retaining features.
+2. Video/output settings and region capture, testing canvas/overlays.
+3. Pause/replay, engine control and per-mode result checks.
+4. Streaming/concurrent recording, secure credentials and real testing.
+5. Optional camera, X11/portal/per-app-audio backends as needed.
+6. HDR only after resolving the plugin color path.
 
-No empaquetar ni cambiar de motor durante estas entregas. No desactivar las
-comprobaciones de ABI/hash para facilitar pruebas con otro binario; una
-recompilación del motor debe mantener el manifiesto y el plugin alineados.
+The original proposal excluded packaging/engine replacement during those deliveries.
+Packaging is now tracked separately in the [package guide](paquete-preliminar.md).
+Do not bypass ABI/hash checks to test another binary; engine rebuilds must keep
+manifest and plugin aligned.
 
-## Archivos contrastados
+## Files cross-checked
 
-- [TUI actual](../scripts/trama_tui.py).
-- [Comando y validación actuales](../scripts/compositor.py).
-- [Opciones del build de GSR](../scripts/prepare-gsr.sh).
-- [Manual GSR del checkout fijado](../third_party/gpu-screen-recorder/gpu-screen-recorder.1).
-- [Opciones Meson del motor](../third_party/gpu-screen-recorder/meson_options.txt).
-- [Enumeración del motor](../third_party/gpu-screen-recorder/src/cli/commands.c).
-- [Captura y restricciones de sesión](../third_party/gpu-screen-recorder/src/recorder/capture_setup.c).
-- [Selección y regiones](../third_party/gpu-screen-recorder/src/recorder/capture_source.c).
-- [Pausa, streaming y destinos](../third_party/gpu-screen-recorder/src/recorder/recorder.c).
-- [Plugin y reloj](../rust/src/lib.rs).
+- [Current TUI](../scripts/trama_tui.py).
+- [Current command/validation](../scripts/compositor.py).
+- [GSR build options](../scripts/prepare-gsr.sh).
+- [Pinned GSR manual](../third_party/gpu-screen-recorder/gpu-screen-recorder.1).
+- [Engine Meson options](../third_party/gpu-screen-recorder/meson_options.txt).
+- [Engine enumeration](../third_party/gpu-screen-recorder/src/cli/commands.c).
+- [Capture/session restrictions](../third_party/gpu-screen-recorder/src/recorder/capture_setup.c).
+- [Selection/regions](../third_party/gpu-screen-recorder/src/recorder/capture_source.c).
+- [Pause, streaming and destinations](../third_party/gpu-screen-recorder/src/recorder/recorder.c).
+- [Plugin/clock](../rust/src/lib.rs).

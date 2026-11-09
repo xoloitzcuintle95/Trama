@@ -1,91 +1,93 @@
-# Guía de usuario de la CLI del compositor GSR
+# GSR compositor CLI user guide
 
-> Para instalar el nuevo paquete de evaluación, consulta
-> [Paquete preliminar](paquete-preliminar.md). Este manual conserva las rutas y
-> órdenes de desarrollo desde fuentes; la instalación empaquetada incluye su
-> propio motor GSR y se abre con `trama`.
+> To install the evaluation package, see [Preliminary package](paquete-preliminar.md).
+> This manual retains development/source-checkout paths and commands. The
+> packaged installation includes its own GSR engine and starts with `trama`.
 
+This page documents the **classic menu and direct commands**. The
+[Trama TUI has a separate guide](tui.md), with per-field editing and corner
+placement. The application is Trama; bundled graphics are neutral samples.
+Personal profiles and graphics may live outside the project.
 
-Esta página documenta el **menú clásico y los comandos directos**. La nueva
-[TUI Trama tiene su propia guía](tui.md), con edición por campo y colocación por
-esquinas. La aplicación se llama Trama; los gráficos incluidos son muestras neutras.
-Los perfiles y gráficos personales pueden residir fuera del proyecto.
+Reference manual for compositor **0.4.0**, `rust-media-overlay` plugin version 4,
+on **GPU Screen Recorder (GSR) 6.1.7**. Primary environment: Pop!_OS 24.04,
+COSMIC/Wayland and GPU encoding. Names/options come from the code and actual
+`scripts/compositor.py` help.
 
-Manual de referencia del compositor **0.4.0**, plugin `rust-media-overlay` versión
-4, sobre **GPU Screen Recorder (GSR) 6.1.7**. Caso principal: Pop!_OS 24.04,
-COSMIC/Wayland y codificación por GPU. Los nombres y opciones descritos proceden
-del código y de la ayuda real de `scripts/compositor.py`.
+The compositor prepares graphics and an avatar; GSR captures the monitor,
+records audio, encodes and writes video. Editing happens before recording in a
+text menu. You do not need to learn GSR's internal commands to use a profile.
 
-El compositor prepara gráficos y un avatar; GSR captura el monitor, graba el
-audio, codifica y escribe el video. Se edita antes de grabar, mediante un menú de
-texto. No hace falta aprender los comandos internos de GSR para usar un perfil.
+The classic CLI still displays Spanish prompts and diagnostics. Literal prompts,
+menu output and accepted answers are retained below so they match the program;
+explanations are in English. The TUI separately supports an English interface.
 
-## Índice
+## Contents
 
-1. [Inicio rápido: Minecraft con el avatar](#1-inicio-rápido-minecraft-con-el-trama)
-2. [Instalación y requisitos](#2-instalación-y-requisitos)
-3. [Referencia de comandos](#3-referencia-de-comandos)
-4. [Referencia del menú interactivo](#4-referencia-del-menú-interactivo)
-5. [Capas, geometría y avatar](#5-capas-geometría-y-avatar)
-6. [Referencia de perfiles TOML](#6-referencia-de-perfiles-toml)
-7. [Grabación, salida y audio](#7-grabación-salida-y-audio)
-8. [Diagnóstico](#8-diagnóstico)
-9. [Límites y alcance de las pruebas](#9-límites-y-alcance-de-las-pruebas)
-10. [Archivos de referencia](#10-archivos-de-referencia)
+1. [Quick start: Minecraft with an avatar](#1-quick-start-minecraft-with-an-avatar)
+2. [Installation and requirements](#2-installation-and-requirements)
+3. [Command reference](#3-command-reference)
+4. [Interactive menu reference](#4-interactive-menu-reference)
+5. [Layers, geometry and avatar](#5-layers-geometry-and-avatar)
+6. [TOML profile reference](#6-toml-profile-reference)
+7. [Recording, output and audio](#7-recording-output-and-audio)
+8. [Troubleshooting](#8-troubleshooting)
+9. [Limits and test coverage](#9-limits-and-test-coverage)
+10. [Reference files](#10-reference-files)
 
-## 1. Inicio rápido: Minecraft con el avatar
+## 1. Quick start: Minecraft with an avatar
 
-Este recorrido parte de una copia del proyecto con GSR nativo instalado y el
-plugin compilado. Si es tu primera instalación, completa la
-[sección de instalación](#2-instalación-y-requisitos) y vuelve aquí.
+This example starts from a project checkout with native GSR installed and the
+plugin built. For a first installation, complete the
+[installation section](#2-installation-and-requirements) and return here.
 
-### 1.1 Abrir la terminal
+### 1.1 Open a terminal
 
-Abre una terminal dentro de tu sesión COSMIC y entra en la carpeta del proyecto.
-Adapta esta ruta a la ubicación de tu copia:
+Open a terminal in your COSMIC session and enter the project folder. Adapt this
+path to your checkout:
 
 ```bash
 cd "$HOME/project-gsr-compositor"
 ```
 
-Comprueba que están los GIF de ejemplo:
+Check that the sample GIFs exist:
 
 ```bash
 ls -l examples/assets/idle.gif examples/assets/talking.gif
 ```
 
-Estos archivos sirven como avatar de ejemplo; puedes usar otros. El programa no
-exige esos nombres ni ese personaje.
+These are sample avatar files; other files may be used. Neither those filenames
+nor that character are required.
 
-### 1.2 Crear un perfil
+### 1.2 Create a profile
 
-Ejecuta, sin `sudo`:
+Run without `sudo`:
 
 ```bash
 python3 scripts/compositor.py edit perfil-minecraft.toml
 ```
 
-Si el archivo no existe, se abre un perfil nuevo en memoria. Al abrir el editor
-se intentan listar pantallas y micrófonos. Debajo aparece este menú:
+If the file does not exist, a new in-memory profile opens. The editor attempts
+to list displays and microphones, then shows this menu:
 
 ```text
 1 pantalla | 2 micrófono/audio | 3 salida/FPS | 4 capas/avatar | 5 guardar | 6 cargar | 7 validar/resumen | 8 grabar | 0 salir:
 ```
 
-Escribe cada tecla y pulsa **Enter**. No uses flechas ni atajos de una TUI.
+Type each key and press **Enter**. Do not use arrow navigation or TUI shortcuts.
 
-1. Escribe `1`. Busca el monitor donde vas a jugar y escribe su número. Anota la
-   resolución mostrada. El ejemplo de colocación de abajo supone **1920 × 1080**.
-2. Escribe `2`. Selecciona `1` para usar el micrófono predeterminado, o el número
-   de la entrada de tu micrófono, por ejemplo tu micrófono USB si aparece.
-   En `Grabar juego/audio del sistema (s/n) [s]:`, pulsa Enter para mantener `s`.
-3. Escribe `3`. En `Archivo MKV, admite {timestamp}`, escribe
-   `recordings/{timestamp}.mkv`. En `FPS [30]:`, pulsa Enter.
-4. Escribe `4` para entrar en capas y luego `v` para agregar el avatar.
+1. Type `1`. Find the display to record and enter its number. Note the resolution;
+   the placement example below assumes **1920 × 1080**.
+2. Type `2`. Select `1` for the default microphone or the number of an explicit
+   input, such as your USB microphone if listed. At
+   `Grabar juego/audio del sistema (s/n) [s]:`, press Enter to retain `s`.
+3. Type `3`. At `Archivo MKV, admite {timestamp}`, enter
+   `recordings/{timestamp}.mkv`. At `FPS [30]:`, press Enter.
+4. Type `4` for layers, then `v` to add the avatar.
 
-Dentro del formulario del avatar, responde en este orden:
+Answer the avatar form in this order:
 
-| Pregunta | Qué escribir |
+| Prompt | What to enter |
 | --- | --- |
 | `GIF reposo` | `examples/assets/idle.gif` |
 | `GIF habla` | `examples/assets/talking.gif` |
@@ -99,52 +101,49 @@ Dentro del formulario del avatar, responde en este orden:
 | `Conservar proporción (s/n) [s]` | Enter |
 | `Visible (s/n) [s]` | Enter |
 
-En un video de 1920 × 1080, este avatar cuadrado queda abajo a la derecha con
-20 píxeles de margen. Si tu resolución es otra, usa la
-[fórmula de colocación](#54-avatar-abajo-a-la-derecha).
+At 1920 × 1080 this square avatar sits bottom-right with a 20-pixel margin.
+For another resolution, use the [placement formula](#54-bottom-right-avatar).
 
-Escribe `0` para volver al menú principal. Escribe `5` y pulsa Enter en
-`Guardar TOML [...]` para guardar en `perfil-minecraft.toml`. Debe aparecer
-`Guardado:` con la ruta del perfil.
+Type `0` to return to the main menu. Type `5`, then Enter at `Guardar TOML [...]`
+to save `perfil-minecraft.toml`. `Guardado:` should show the profile path.
 
-En las preguntas del menú escribe las rutas **sin comillas de shell**, incluso
-si tienen espacios. Por ejemplo: `mis gráficos/idle.gif`. Las comillas sí se usan
-en un comando de terminal para proteger un argumento con espacios.
+Enter paths **without shell quotes** in menu prompts, even if they contain
+spaces, for example `mis gráficos/idle.gif`. Shell commands do need quotes to
+protect an argument containing spaces.
 
-### 1.3 Validar el perfil
+### 1.3 Validate the profile
 
-Escribe `7`. El programa comprueba recursos y dispositivos y muestra pantalla,
-micrófono resuelto, capas, tamaño, visibilidad y salida. Si aparece `Corregir:`,
-atiende el valor indicado; una validación fallida no empieza a grabar.
+Type `7`. The program checks assets/devices and shows the display, resolved
+microphone, layers, sizes, visibility and output. If `Corregir:` appears, fix the
+specified value; failed validation does not start recording.
 
-Escribe `0` para salir del editor. También puedes validar desde la terminal:
+Type `0` to exit the editor. Validation is also available from the terminal:
 
 ```bash
 python3 scripts/compositor.py check perfil-minecraft.toml
 ```
 
-### 1.4 Grabar 30 segundos
+### 1.4 Record 30 seconds
 
-Abre Minecraft y entra en el mundo que quieres grabar. Vuelve a la terminal y
-lanza:
+Open Minecraft and the world you want to record. Return to the terminal and run:
 
 ```bash
 python3 scripts/compositor.py record perfil-minecraft.toml --seconds 30
 ```
 
-Este comando valida, muestra el resumen y empieza sin otra confirmación. Cuando
-aparezca `Grabando. Ctrl+C termina y cierra el archivo.`, cambia a Minecraft.
-Muévete y habla para comprobar juego, audio y cambio del avatar. También deja un
-momento de silencio para comprobar el regreso a reposo.
+The command validates, prints the summary and starts without another confirmation.
+When `Grabando. Ctrl+C termina y cierra el archivo.` appears, switch to Minecraft.
+Move and speak to test video, audio and avatar response. Include silence to check
+returning to idle.
 
-La captura incluye **todo el monitor seleccionado**, también la terminal mientras
-esté visible. No hay cuenta atrás, selección automática de la ventana del juego
-ni atajo global de inicio. La duración es aproximada: incluye arranque y se añade
-el tiempo necesario para cerrar el archivo.
+Capture covers **the entire selected monitor**, including the terminal while
+visible. There is no countdown, automatic game-window selection or global start
+shortcut. Duration is approximate: startup is included and file-finalization time
+is added.
 
-### 1.5 Encontrar y revisar el video
+### 1.5 Find and review the video
 
-Al terminar, la terminal muestra:
+On completion, the terminal shows:
 
 ```text
 Guardado: /ruta/del/proyecto/recordings/FECHA.mkv
@@ -152,68 +151,68 @@ Log: /ruta/del/proyecto/recordings/FECHA.mkv.gsr.log
 Informe: /ruta/del/proyecto/recordings/FECHA.mkv.report.json
 ```
 
-Con este perfil, creado en la raíz del proyecto, puedes localizarlo con:
+With this profile created at the project root, locate the output using:
 
 ```bash
 ls -lt recordings/
 ```
 
-Abre el `.mkv` con tu reproductor. Comprueba imagen del juego, posición y animación
-del avatar, sonido del juego, voz y sincronía. Que el CLI indique éxito no sustituye
-esa revisión visual y auditiva.
+Open the `.mkv` in a player. Check the captured content, avatar placement/animation,
+system sound, voice and synchronization. CLI success does not replace visual and
+auditory review.
 
-La próxima vez puedes volver a editar el mismo perfil o grabar directamente:
+Next time, edit the same profile or record directly:
 
 ```bash
 python3 scripts/compositor.py edit perfil-minecraft.toml
 python3 scripts/compositor.py record perfil-minecraft.toml
 ```
 
-El segundo comando graba hasta que vuelvas a la terminal y pulses **Ctrl+C**.
+The second command records until you return to the terminal and press **Ctrl+C**.
 
-## 2. Instalación y requisitos
+## 2. Installation and requirements
 
-### 2.1 Componentes y entorno
+### 2.1 Components and environment
 
-| Componente | Para qué se necesita |
+| Component | Purpose |
 | --- | --- |
-| Copia del proyecto | Debe incluir `scripts/`, `rust/`, `rust/Cargo.lock`, pruebas y los recursos que vayas a usar |
-| Python 3.11 o posterior | CLI y lectura TOML con `tomllib`; aquí se comprobó Python 3.12.3 |
-| Rust y Cargo recientes | Compilar el plugin y verificadores; aquí se comprobó Rust 1.99.1. El proyecto no declara una versión mínima de Rust verificada |
-| Compilador C, Git y herramientas de construcción | Construcción de GSR y comprobación de ABI C/Rust |
-| GSR nativo compatible | Captura, audio, codificación y escritura; debe estar en `PATH` |
-| EGL/OpenGL y controlador gráfico funcional | El plugin reutiliza el contexto de GSR; requiere GLES 3 o, en la ruta GLX, GL 3.3 o GL 3 con `ARB_sampler_objects` |
-| GPU con H.264 admitido por GSR | El comando exige codificación GPU y no habilita respaldo por CPU |
-| Sesión gráfica y acceso a DRM/KMS | Capturar el monitor en COSMIC/Wayland |
-| PulseAudio o servicio compatible de PipeWire | Audio del juego y entrada de micrófono |
-| `pactl` y `parec` | Consultar entradas y comprobar/capturar el micrófono |
-| `ffprobe` | Comprobar los streams del archivo al finalizar |
-| Pillow y FFmpeg | Necesarios para la suite completa de pruebas, no para dibujar cada cuadro del plugin |
+| Project checkout | Includes `scripts/`, `rust/`, `rust/Cargo.lock`, tests and required assets |
+| Python 3.11 or later | CLI and `tomllib`; Python 3.12.3 was checked here |
+| Recent Rust and Cargo | Build plugin/validators; Rust 1.99.1 was checked here. No verified minimum Rust version is declared |
+| C compiler, Git and build tools | Build GSR and check the C/Rust ABI |
+| Compatible native GSR | Capture, audio, encoding and output; must be in `PATH` |
+| Working EGL/OpenGL and graphics driver | Plugin reuses GSR's context; needs GLES 3, or GLX with GL 3.3 / GL 3 plus `ARB_sampler_objects` |
+| GPU with GSR-supported H.264 | Recording requires GPU encoding without CPU fallback |
+| Graphical session and DRM/KMS access | Monitor capture in COSMIC/Wayland |
+| PulseAudio or compatible PipeWire service | System audio and microphone input |
+| `pactl` and `parec` | Query inputs and probe/capture the microphone |
+| `ffprobe` | Validate output streams on completion |
+| Pillow and FFmpeg | Full test suite, not per-frame plugin drawing |
 
-El plugin usa Rust edición 2024 y APIs de la biblioteca estándar recientes. No
-supongas que el Rust del repositorio de tu distribución es suficiente. Una versión
-más antigua que la usada aquí requiere comprobar su compilación.
+The plugin uses Rust edition 2024 and recent standard-library APIs. Do not assume
+your distribution's Rust package is sufficient. Older versions than the one
+used here need an actual build check.
 
-La referencia de GSR está fijada a este commit:
+GSR is pinned to:
 
 ```text
 f97d1e392816503282d20a0804c3ce3fd2943767
 ```
 
-La versión numérica `6.1.7` por sí sola no basta: el CLI compara los hashes del
-GSR instalado y del plugin con el manifiesto generado durante el build. Un GSR de
-otra compilación puede rechazarse aunque muestre la misma versión.
+The numeric version `6.1.7` alone is insufficient: the CLI compares installed-GSR
+and plugin hashes against the build manifest. Another build may be rejected even
+if it reports the same version.
 
-La instalación descrita usa el código de GSR en `third_party/gpu-screen-recorder`,
-separado del código del compositor. No hay un instalador propio del compositor,
-un paquete de Python que instalar ni un comando `compositor` registrado globalmente.
-Se ejecuta `python3 scripts/compositor.py` desde la copia del proyecto.
+This installation keeps GSR source in `third_party/gpu-screen-recorder`, separate
+from compositor code. The source workflow does not install a Python package or
+register a global `compositor` command; run `python3 scripts/compositor.py` from
+the checkout. Packaged Trama installation is covered separately above.
 
-### 2.2 Paquetes de Pop!_OS 24.04
+### 2.2 Pop!_OS 24.04 packages
 
-Si ya tienes el entorno preparado, comprueba los componentes antes de reinstalar.
-Para una instalación nueva, estos comandos son para que los ejecute el usuario;
-**modifican el sistema y requieren `sudo`**:
+If the environment is already prepared, check components before reinstalling.
+For a fresh setup, these commands are for the user to execute; they **modify the
+system and require `sudo`**:
 
 ```bash
 sudo apt-get update
@@ -225,40 +224,39 @@ sudo apt-get install build-essential git curl pkg-config meson ninja-build \
   libswresample-dev libavfilter-dev libswscale-dev libglvnd-dev
 ```
 
-Para las pruebas que usan Pillow:
+For Pillow-based tests:
 
 ```bash
 sudo apt-get install python3-pil
 ```
 
-La lista corresponde a las dependencias del código GSR inspeccionado y a los
-paquetes de la base Ubuntu 24.04 de Pop!_OS. Las versiones y disponibilidad
-concretas dependen de tus repositorios. `pulseaudio-utils` aporta las herramientas
-de cliente; usarlo no requiere sustituir PipeWire por un servidor PulseAudio.
-Véase la [ficha oficial del paquete](https://packages.ubuntu.com/noble/pulseaudio-utils).
+The list reflects inspected GSR dependencies and packages from Pop!_OS's Ubuntu
+24.04 base. Exact versions/availability depend on configured repositories.
+`pulseaudio-utils` provides client tools; it does not require replacing PipeWire
+with a PulseAudio server. See the [official package page](https://packages.ubuntu.com/noble/pulseaudio-utils).
 
-El controlador de codificación depende de la GPU. En el equipo Intel de referencia
-se encontró `intel-media-va-driver`; eso no prueba que funcione en otra máquina.
-Comprueba primero `gpu-screen-recorder --info`. No hay una selección o instalación
-automática de drivers en el compositor.
+The encoding driver depends on the GPU. The reference Intel machine had
+`intel-media-va-driver`; that does not establish compatibility elsewhere. Check
+`gpu-screen-recorder --info` first. The compositor does not select/install drivers
+automatically.
 
-### 2.3 Preparar Rust
+### 2.3 Prepare Rust
 
-Comprueba:
+Check:
 
 ```bash
 rustc --version
 cargo --version
 ```
 
-Si falta Rust, el [instalador oficial mediante rustup](https://rust-lang.org/tools/install/)
-ofrece este comando para Linux, ejecutado como usuario normal:
+If Rust is missing, the [official rustup installer](https://rust-lang.org/tools/install/)
+provides this Linux command, run as a normal user:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Después abre otra terminal o carga el entorno:
+Then open another terminal or load the environment:
 
 ```bash
 . "$HOME/.cargo/env"
@@ -266,19 +264,19 @@ rustc --version
 cargo --version
 ```
 
-Sigue las indicaciones del instalador. No se necesita `sudo` para instalar la
-toolchain en tu cuenta. Esta guía no instala ni actualiza nada automáticamente.
+Follow installer instructions. Installing the toolchain into your account needs
+no `sudo`. This guide does not install or update anything automatically.
 
-### 2.4 Obtener y compilar GSR
+### 2.4 Obtain and build GSR
 
-Trabaja desde la raíz de tu copia del compositor. Si las fuentes de GSR **ya
-están**, empieza comprobando el commit:
+Work from the compositor checkout root. If GSR sources **already exist**, start
+by checking the commit:
 
 ```bash
 git -C third_party/gpu-screen-recorder rev-parse HEAD
 ```
 
-Para una copia nueva que todavía no tenga esa carpeta:
+For a new copy without that folder:
 
 ```bash
 mkdir -p third_party
@@ -286,46 +284,45 @@ git clone https://repo.dec05eba.com/gpu-screen-recorder third_party/gpu-screen-r
 git -C third_party/gpu-screen-recorder checkout --detach f97d1e392816503282d20a0804c3ce3fd2943767
 ```
 
-No cambies de commit en un árbol con trabajo propio sin revisarlo. El script Rust
-rechaza otra referencia o modificaciones en la cabecera/cargador/recorder que
-utiliza para verificar la ABI.
+Do not switch a tree containing your own work without review. The Rust build
+script rejects a different baseline or changes to the header/loader/recorder used
+for ABI verification.
 
-Para configurar y compilar GSR por primera vez, sin privilegios:
+To configure and build GSR initially, without privileges:
 
 ```bash
 bash scripts/prepare-gsr.sh
 ```
 
-Este script configura release con prefijo `/usr/local`, FFmpeg del sistema,
-portal y audio por aplicación desactivados, sin ejemplos de plugins, servicio
-systemd ni ajuste de suspensión de NVIDIA. Si aún no existe la carpeta de GSR,
-el script la clonaría por su cuenta; para respetar el commit esperado, prepara
-antes la copia fijada como se muestra arriba.
+This configures release mode with `/usr/local` prefix and system FFmpeg; portal,
+per-application audio, plugin examples, systemd service and NVIDIA suspend tweak
+are disabled. If GSR's folder is absent, the script clones it itself; to retain
+the expected commit, first prepare the pinned copy as shown above.
 
-Si ya hay un build configurado, recompílalo sin volver a hacer el setup inicial:
+For an already-configured build, rebuild without repeating initial setup:
 
 ```bash
 meson compile -C third_party/gpu-screen-recorder/build
 ```
 
-### 2.5 Instalar GSR nativo
+### 2.5 Install native GSR
 
-Después de compilar, el paso de instalación requiere privilegios:
+After building, installation needs privileges:
 
 ```bash
 sudo meson install -C third_party/gpu-screen-recorder/build
 ```
 
-Con el prefijo anterior instala GSR y su helper en `/usr/local/bin`. El script
-oficial de posinstalación asigna `cap_sys_admin+ep` a `gsr-kms-server` para KMS.
-Ese privilegio corresponde al helper de GSR, no al compositor. No ejecutes la
-CLI Python con `sudo` ni asignes capacidades a nuestro plugin.
+With that prefix, GSR and its helper install under `/usr/local/bin`. Upstream's
+post-install script assigns `cap_sys_admin+ep` to `gsr-kms-server` for KMS. This
+privilege belongs to the GSR helper, not the compositor. Do not run the Python
+CLI with `sudo` or grant capabilities to our plugin.
 
-El `install.sh` antiguo de GSR está deprecado y recrea el build con otras opciones;
-esta guía usa Meson directamente. No hace falta instalar Flatpak para este flujo:
-el CLI actual busca un ejecutable nativo en `PATH` y carga nuestro `.so` local.
+GSR's old `install.sh` is deprecated and recreates the build with different
+options; this guide uses Meson directly. Flatpak is not needed: this source CLI
+looks for a native executable in `PATH` and loads the local `.so`.
 
-Comprueba:
+Check:
 
 ```bash
 command -v gpu-screen-recorder
@@ -334,26 +331,26 @@ command -v gsr-kms-server
 getcap "$(command -v gsr-kms-server)"
 ```
 
-La capacidad esperada para el helper de esta instalación es `cap_sys_admin=ep`.
-Si no aparece o el acceso KMS falla, revisa el resultado de la instalación de GSR.
+Expected helper capability is `cap_sys_admin=ep`. If missing, or KMS access fails,
+review GSR installation output.
 
-### 2.6 Compilar el compositor
+### 2.6 Build the compositor
 
-Desde la raíz del proyecto, descarga primero las dependencias Cargo si la cuenta
-no tiene caché. Este paso requiere red, pero no `sudo`:
+From the project root, first fetch Cargo dependencies if the account lacks a
+cache. Network access is required, but not `sudo`:
 
 ```bash
 cargo fetch --manifest-path rust/Cargo.toml --locked
 ```
 
-Después:
+Then:
 
 ```bash
 bash scripts/build-rust-overlay.sh
 ```
 
-El script compila con `--offline --locked`, compara la ABI con la cabecera C y
-genera, entre otros:
+The script builds with `--offline --locked`, compares ABI against the C header
+and generates, among other files:
 
 ```text
 build/overlay-rust.so
@@ -362,17 +359,16 @@ build/rust-target/release/scene-check
 build/rust-target/release/element-check
 ```
 
-Necesita también el binario local
-`third_party/gpu-screen-recorder/build/gpu-screen-recorder`: su hash se registra
-en el manifiesto. El GSR instalado que encuentra la CLI debe coincidir con él.
-Si recompilas GSR, normalmente tendrás que instalar ese build y regenerar el
-manifiesto del plugin para mantener la correspondencia.
+It also needs `third_party/gpu-screen-recorder/build/gpu-screen-recorder`: its
+hash is recorded in the manifest. Installed GSR found by the CLI must match it.
+After rebuilding GSR, normally install that build and regenerate the plugin
+manifest to keep them aligned.
 
-No hay que instalar el plugin en `/usr/lib`: la CLI carga
-`build/overlay-rust.so` por su ruta conocida. Conserva el árbol del proyecto y
-sus artefactos; copiar solo `compositor.py` a otra carpeta no prepara el programa.
+The plugin need not be installed into `/usr/lib`: the CLI loads the known
+`build/overlay-rust.so` path. Retain the checkout/artifacts; copying just
+`compositor.py` elsewhere does not prepare a working application.
 
-### 2.7 Comprobaciones antes del primer uso
+### 2.7 Checks before first use
 
 ```bash
 python3 --version
@@ -385,10 +381,10 @@ python3 scripts/compositor.py --help
 python3 scripts/compositor.py check examples/perfil.toml --assets-only
 ```
 
-El último comando valida los GIF y la configuración del ejemplo, sin exigir una
-pantalla elegida. Sigue necesitando GSR nativo y los artefactos de build correctos.
+The last command validates sample GIFs/configuration without a selected display.
+It still requires native GSR and the correct build artifacts.
 
-En una terminal de tu sesión COSMIC, comprueba también:
+From your COSMIC-session terminal, also check:
 
 ```bash
 ls -l /dev/dri
@@ -399,24 +395,24 @@ pactl info
 python3 scripts/compositor.py devices
 ```
 
-La disponibilidad real depende del controlador, acceso a DRM/KMS, sesión Wayland,
-servidor de audio y dispositivos conectados. Una sesión SSH, contenedor o terminal
-sin acceso a la sesión gráfica puede compilar el proyecto y aun así no capturar.
+Actual availability depends on driver, DRM/KMS access, Wayland session, audio
+server and connected devices. An SSH session, container or terminal without
+access to the graphical session may build successfully and still be unable to
+capture.
 
-## 3. Referencia de comandos
+## 3. Command reference
 
-Todas las sintaxis siguientes se ejecutan desde la raíz del proyecto. Si estás
-en otra carpeta, utiliza la ruta completa al script. Una ruta de perfil relativa
-en el comando se interpreta desde el directorio actual de la terminal.
+All syntax below runs from the project root. Elsewhere, use the full script path.
+A relative profile argument is resolved from the terminal's current directory.
 
-### 3.1 Ayuda
+### 3.1 Help
 
 ```text
 python3 scripts/compositor.py [-h] {devices,edit,check,record} ...
 ```
 
-`-h` y `--help` imprimen la ayuda y terminan. Están disponibles tanto en el
-programa principal como en cada subcomando:
+`-h` and `--help` print help and exit. Both work for the main program and each
+subcommand:
 
 ```bash
 python3 scripts/compositor.py --help
@@ -426,19 +422,18 @@ python3 scripts/compositor.py check --help
 python3 scripts/compositor.py record --help
 ```
 
-No existe `--version` en esta CLI. La versión de GSR se consulta con
-`gpu-screen-recorder --version`; la versión del compositor figura en
-[`rust/Cargo.toml`](../rust/Cargo.toml).
+This CLI has no `--version`. Query GSR using `gpu-screen-recorder --version`;
+the compositor version is in [`rust/Cargo.toml`](../rust/Cargo.toml).
 
-### 3.2 Sin subcomando
+### 3.2 Without a subcommand
 
 ```bash
 python3 scripts/compositor.py
 ```
 
-Abre el editor con un perfil **nuevo**, basado en el directorio actual. No carga
-por sí solo `perfil.toml`, aunque ese archivo exista. Al guardar propondrá
-`perfil.toml` en el directorio actual. No hay guardado automático.
+Opens the editor with a **new** profile based on the current directory. It does
+not automatically load `perfil.toml`, even if that file exists. Saving proposes
+`perfil.toml` in the current directory. There is no automatic saving.
 
 ### 3.3 `devices`
 
@@ -446,17 +441,16 @@ por sí solo `perfil.toml`, aunque ese archivo exista. Al guardar propondrá
 python3 scripts/compositor.py devices [-h]
 ```
 
-Lista monitores anunciados por GSR, micrófonos con identificador y descripción,
-y disponibilidad de `default_output`. No tiene argumentos ni opciones de captura.
+Lists GSR-advertised monitors, microphone identifiers/descriptions and
+`default_output` availability. No arguments or capture options.
 
 ```bash
 python3 scripts/compositor.py devices
 ```
 
-Los nombres y el orden dependen de tu equipo. Que aparezca la opción
-`default_input` no demuestra que el predeterminado actual sea válido; se resuelve
-y comprueba antes de grabar. Este comando no necesita tener un perfil ni valida
-el plugin como lo hace `check`.
+Names/order depend on the machine. The `default_input` option does not prove the
+current default is valid; it is resolved and checked before recording. No profile
+is needed and this command does not validate the plugin as `check` does.
 
 ### 3.4 `edit`
 
@@ -464,9 +458,9 @@ el plugin como lo hace `check`.
 python3 scripts/compositor.py edit [-h] [profile]
 ```
 
-| Argumento | Obligatorio | Comportamiento |
+| Argument | Required | Behavior |
 | --- | --- | --- |
-| `profile` | No | Si existe, carga el TOML. Si no existe, prepara uno nuevo asociado a esa ruta. Sin argumento, abre uno nuevo basado en el directorio actual |
+| `profile` | No | Load an existing TOML; otherwise prepare a new profile at that path. Without an argument, create a new profile based on the current directory |
 
 ```bash
 python3 scripts/compositor.py edit perfil-minecraft.toml
@@ -474,9 +468,9 @@ python3 scripts/compositor.py edit "perfiles/desarrollo diario.toml"
 python3 scripts/compositor.py edit
 ```
 
-Un TOML existente inválido produce error; no se reemplaza silenciosamente por uno
-nuevo. El editor permite guardar aunque no haya podido consultar dispositivos,
-pero no omite la validación al iniciar una grabación.
+Invalid existing TOML produces an error, not a silently substituted new profile.
+The editor can save even if device discovery failed, but recording still requires
+validation.
 
 ### 3.5 `check`
 
@@ -484,28 +478,27 @@ pero no omite la validación al iniciar una grabación.
 python3 scripts/compositor.py check [-h] [--assets-only] profile
 ```
 
-| Argumento u opción | Predeterminado | Efecto |
+| Argument or option | Default | Effect |
 | --- | --- | --- |
-| `profile` | Sin valor; obligatorio | TOML existente que se quiere validar |
-| `--assets-only` | Desactivado | Omite consulta de pantallas y audio; comprueba configuración, recursos, build y ruta de salida |
+| `profile` | No value; required | Existing TOML to validate |
+| `--assets-only` | Off | Skip display/audio queries; check configuration, assets, build and output path |
 
 ```bash
 python3 scripts/compositor.py check perfil-minecraft.toml
 python3 scripts/compositor.py check examples/perfil.toml --assets-only
 ```
 
-El modo normal verifica compatibilidad del build, H.264 GPU/MKV anunciados por
-GSR, monitor elegido, audio configurado, muestras del micrófono, decodificación
-real de recursos, geometría, presupuesto de píxeles y destino de salida.
-Comprobar el micrófono abre una captura breve para confirmar que entrega datos;
-no guarda ese audio en un archivo.
+Normal mode verifies build compatibility, GSR-advertised GPU H.264/MKV, selected
+monitor, configured audio, microphone samples, real asset decoding, geometry,
+pixel budget and output destination. Microphone probing briefly captures data to
+confirm the source produces samples; it does not save that audio to a file.
 
-`--assets-only` no comprueba hardware, permisos efectivos de captura ni audio.
-Muestra `SOLO RECURSOS: pantallas, audio y captura no comprobados.`. No equivale a
-una prueba completa de grabación ni a una previsualización.
+`--assets-only` checks neither hardware, effective capture permissions nor audio.
+It prints `SOLO RECURSOS: pantallas, audio y captura no comprobados.`. It is not
+a full recording test or preview.
 
-`check` no crea un video ni la carpeta de salida. El timestamp de su resumen
-corresponde a esa validación; un posterior `record` genera otro nombre.
+`check` creates neither video nor output folder. Its displayed timestamp belongs
+to that validation; a later `record` generates another filename.
 
 ### 3.6 `record`
 
@@ -513,191 +506,185 @@ corresponde a esa validación; un posterior `record` genera otro nombre.
 python3 scripts/compositor.py record [-h] [--seconds SECONDS] profile
 ```
 
-| Argumento u opción | Predeterminado | Efecto |
+| Argument or option | Default | Effect |
 | --- | --- | --- |
-| `profile` | Sin valor; obligatorio | Carga y valida este TOML antes de grabar |
-| `--seconds SECONDS` | Sin duración fija | Segundos aproximados desde el lanzamiento de GSR; acepta números entre 1 y 7200, incluidos decimales |
+| `profile` | No value; required | Load and validate this TOML before recording |
+| `--seconds SECONDS` | No fixed duration | Approximate seconds from GSR launch; accepts 1..7200, including decimals |
 
-Prueba de 30 segundos:
+30-second test:
 
 ```bash
 python3 scripts/compositor.py record perfil-minecraft.toml --seconds 30
 ```
 
-Diez minutos:
+Ten minutes:
 
 ```bash
 python3 scripts/compositor.py record perfil-minecraft.toml --seconds 600
 ```
 
-Sin parada automática:
+Without automatic stopping:
 
 ```bash
 python3 scripts/compositor.py record perfil-minecraft.toml
 ```
 
-Después del resumen empieza directamente, sin menú ni pregunta de confirmación.
-Para terminar antes del plazo, o cuando no hay plazo, vuelve a esa terminal y pulsa
-**Ctrl+C**. Espera a que aparezca `Guardado:` o el diagnóstico de error. El cierre
-normal envía SIGINT a GSR y espera hasta 15 segundos; si no termina, el programa
-fuerza la salida y marca el resultado incompleto. No cierres la terminal ni uses
-SIGKILL como forma habitual de detenerlo.
+Recording starts directly after the summary, without a menu/confirmation. To stop
+early or without a time limit, return to that terminal and press **Ctrl+C**.
+Wait for `Guardado:` or an error diagnostic. Normal shutdown sends SIGINT to GSR
+and waits up to 15 seconds, then forces termination and marks incomplete output
+if needed. Closing the terminal or SIGKILL should not be the normal stop method.
 
-La opción de duración pertenece a este subcomando. El menú no tiene un campo
-«duración». No existe pausa/reanudación ni tecla global para parar desde Minecraft.
+Duration belongs to this subcommand. The classic menu has no duration field.
+There is no pause/resume or global shortcut to stop from another application.
 
-### 3.7 Códigos de salida y alcance de las opciones
+### 3.7 Exit codes and option scope
 
-| Código | Significado habitual |
+| Code | Usual meaning |
 | --- | --- |
-| `0` | Comando completado, o salida normal del menú |
-| `2` | Error de argumentos, perfil, dispositivos, build o grabación detectado por la CLI |
-| `130` | Interrupción/fin de entrada capturado en el nivel principal, por ejemplo Ctrl+C en el menú |
+| `0` | Command completed or normal menu exit |
+| `2` | CLI-detected argument, profile, device, build or recording error |
+| `130` | Interrupt/EOF caught at the top level, such as Ctrl+C in the menu |
 
-Ctrl+C durante `record` se maneja como una petición de cierre: puede acabar con
-código `0` si el archivo cierra correctamente. En el menú, los errores de una
-acción se muestran y el editor continúa; un posterior `0` no certifica que todas
-las acciones previas hayan funcionado.
+Ctrl+C during `record` requests finalization and may return `0` if the file closes
+correctly. In the menu, action errors are shown and editing continues; a later
+`0` does not certify that all earlier actions succeeded.
 
-Los cuatro subcomandos anteriores son toda la CLI de escenas actual. No existen
-opciones `--screen`, `--mic`, `--output`, `--fps`, `--preview`, `--scene` o
-`--avatar` en `compositor.py`: esos valores se editan en el menú o en TOML.
-Los scripts anteriores de elemento único tienen sus propias opciones y no deben
-confundirse con esta interfaz; véase [configuración de un elemento](configuracion-elemento.md).
+Those four subcommands are the complete current scene CLI. `compositor.py` has
+no `--screen`, `--mic`, `--output`, `--fps`, `--preview`, `--scene` or `--avatar`
+options: edit those settings through the menu or TOML. Earlier single-element
+scripts have separate options; see [element configuration](configuracion-elemento.md).
 
-## 4. Referencia del menú interactivo
+## 4. Interactive menu reference
 
-### 4.1 Reglas de entrada
+### 4.1 Input rules
 
-El menú es un conjunto de preguntas de texto, no una pantalla navegable con
-flechas. Después de cada respuesta pulsa Enter.
+The menu is a sequence of text prompts, not an arrow-navigable screen. Press
+Enter after each response.
 
-| Tipo de pregunta | Significado de Enter |
+| Prompt type | Meaning of Enter |
 | --- | --- |
-| Formulario con valor entre `[...]` | Conserva ese valor |
-| Pregunta `(s/n)` | Conserva `s` o `n` mostrado entre corchetes |
-| Selección numerada de pantalla, micrófono o capa | Debes escribir un número; Enter vacío no selecciona la primera opción |
-| Acción del menú principal o de capas | Enter vacío no vuelve ni confirma: muestra opción desconocida o vuelve a pedir una acción |
-| `TOML a cargar:` o `Nueva posición 1..N:` | Requiere escribir la ruta o el número; no tiene predeterminado |
+| Form with a value in `[...]` | Keep that value |
+| `(s/n)` question | Keep the bracketed `s` or `n` |
+| Numbered display/microphone/layer selection | Type a number; empty Enter does not select the first option |
+| Main/layer menu action | Empty Enter does not go back or confirm; it reports an unknown option or asks again |
+| `TOML a cargar:` or `Nueva posición 1..N:` | A path or number is required; no default |
 
-En preguntas `(s/n)` se aceptan `s` y `n`, también en mayúscula. `sí`, `yes` y `y`
-no son respuestas admitidas. Las letras de las acciones de capas se escriben en
-minúscula. No hay una tecla general para cancelar un formulario a mitad: Ctrl+C
-sale del editor completo y no guarda los cambios. Ctrl+D al pedir entrada también
-cierra el programa sin guardar.
+For `(s/n)`, only `s` and `n` are accepted, including uppercase. `sí`, `yes` and
+`y` are not valid answers. Layer action letters must be lowercase. There is no
+general mid-form cancel key: Ctrl+C exits the entire editor without saving.
+Ctrl+D at an input prompt also exits without saving.
 
-Los números son enteros salvo el umbral RMS, que admite decimales. Usa punto
-(`0.04`), no coma (`0,04`). No escribas unidades, comillas ni el símbolo `%`.
+Numbers are integers except RMS threshold, which accepts decimals. Use a decimal
+point (`0.04`), not comma (`0,04`). Do not enter units, quotes or `%`.
 
-### 4.2 Apertura y menú principal
+### 4.2 Startup and main menu
 
-Al iniciar se intentan consultar dispositivos. Si la consulta falla, se informa y
-se permite continuar editando/guardando. La cabecera muestra perfil, pantalla,
-micrófono y cantidad de capas, seguida del menú principal.
+Startup attempts device discovery. Failure is reported but editing/saving can
+continue. The header shows profile, display, microphone and layer count, followed
+by the main menu.
 
-| Tecla | Acción |
+| Key | Action |
 | --- | --- |
-| `1` | Pantalla |
-| `2` | Micrófono y audio del sistema |
-| `3` | Archivo de salida y FPS |
-| `4` | Capas y avatar |
-| `5` | Guardar perfil |
-| `6` | Cargar otro perfil |
-| `7` | Validar y mostrar resumen |
-| `8` | Validar, mostrar resumen e iniciar una grabación si confirmas |
-| `0` | Salir del programa |
+| `1` | Display |
+| `2` | Microphone and system audio |
+| `3` | Output file and FPS |
+| `4` | Layers and avatar |
+| `5` | Save profile |
+| `6` | Load another profile |
+| `7` | Validate and show summary |
+| `8` | Validate, show summary and record if confirmed |
+| `0` | Exit program |
 
-Salir o cargar otro perfil no guarda automáticamente los cambios ni pregunta por
-ellos. Guarda con `5` antes si quieres conservarlos. El menú no cambia escenas en
-una grabación que ya esté en curso.
+Exiting or loading another profile neither saves changes automatically nor asks
+about them. Save with `5` beforehand to retain them. The menu does not change
+scenes during an active recording.
 
-### 4.3 `1`: pantalla
+### 4.3 `1`: display
 
-Se consulta de nuevo la lista de GSR. Cada opción muestra nombre de monitor y
-resolución, por ejemplo `MONITOR-1: 1920×1080`.
+GSR's list is queried again. Each option shows monitor name/resolution, such as
+`MONITOR-1: 1920×1080`.
 
-En `Pantalla (número):` escribe el número de la lista actual. No escribas ahí el
-nombre del monitor. El perfil guarda el nombre, no su número de orden.
+At `Pantalla (número):`, type a number from the current list, not the monitor
+name. The profile stores its name rather than selection index.
 
-Vuelve al menú principal después de elegir. No hay un `0` para cancelar dentro
-de esta selección; `0` es un número fuera de la lista. Solo se ofrecen monitores,
-aunque GSR tenga otras modalidades como ventanas, regiones o portal.
+Choosing returns to the main menu. There is no cancel `0` inside this selection;
+it is an out-of-range number. Only monitors are offered, even though GSR has
+other capture modes such as windows, regions or portal.
 
-### 4.4 `2`: micrófono y audio
+### 4.4 `2`: microphone and audio
 
-La lista empieza con estas opciones:
+The list begins with:
 
 ```text
 1. Predeterminado del sistema
 2. Sin micrófono (requiere no tener avatar)
 ```
 
-Después aparecen las entradas concretas consultadas en ese momento. En
-`Micrófono (número):` escribe el número deseado. En esta selección, `2` significa
-«sin micrófono»; no es la tecla del menú principal para entrar a audio.
+Specific currently queried inputs follow. At `Micrófono (número):`, enter the
+desired number. Here `2` means no microphone, not the main-menu audio action.
 
-Se pregunta a continuación:
+Next prompt:
 
 ```text
 Grabar juego/audio del sistema (s/n) [s]:
 ```
 
-El valor mostrado puede ser `[n]` si el perfil ya lo tenía desactivado. Responde
-`s`, `n` o Enter para mantenerlo. Luego vuelve al menú principal.
+The displayed value can be `[n]` when disabled in the profile. Answer `s`, `n`,
+or Enter to retain it, then return to the main menu.
 
-Un avatar necesita micrófono incluso si está oculto. Para grabar sin micrófono,
-quita la capa avatar; ocultarla no basta. Puedes tener micrófono grabado sin avatar.
+An avatar needs a microphone even while hidden. To record without a microphone,
+remove the avatar layer; hiding it is insufficient. Recording a microphone
+without an avatar is supported.
 
-### 4.5 `3`: salida y FPS
+### 4.5 `3`: output and FPS
 
-Las preguntas aparecen en este orden:
+Prompts appear in this order:
 
-1. `Archivo MKV, admite {timestamp} [...]`: ruta del archivo, no solo una carpeta.
-2. `FPS [...]`: entero entre `1` y `120`, predeterminado `30`.
+1. `Archivo MKV, admite {timestamp} [...]`: a file path, not just a folder.
+2. `FPS [...]`: integer `1`..`120`, default `30`.
 
-Ejemplo de respuesta al archivo:
+Example filename response:
 
 ```text
 recordings/minecraft-{timestamp}.mkv
 ```
 
-La extensión debe ser `.mkv` en minúsculas. No se ofrece selección de contenedor.
-La ruta relativa se interpreta desde la carpeta base del perfil. Las carpetas que
-falten se crean al grabar. La opción no modifica la resolución del monitor ni el
-límite de FPS de Minecraft.
+The extension must be lowercase `.mkv`. Container selection is not exposed.
+Relative paths start at the profile's base directory. Missing folders are
+created at recording time. This changes neither monitor resolution nor the
+captured application's FPS limit.
 
-### 4.6 `4`: capas y avatar
+### 4.6 `4`: layers and avatar
 
-Primero se muestra:
+First shown:
 
 ```text
 Capas (primera = fondo):
 ```
 
-Cada fila incluye número, nombre, tipo (`graphic` o `avatar`) y visibilidad.
-Después:
+Each row has number, name, type (`graphic` or `avatar`) and visibility. Then:
 
 ```text
 a agregar gráfico | v agregar avatar | e editar/reemplazar | o ocultar/mostrar | q quitar | r reordenar | 0 volver:
 ```
 
-| Tecla | Qué hace |
+| Key | Action |
 | --- | --- |
-| `a` | Agrega una capa gráfica PNG/JPG/GIF al final, por encima de las anteriores |
-| `v` | Agrega un avatar al final; solo puede haber uno |
-| `e` | Pide un número de capa y abre su formulario para editarla o reemplazar archivos |
-| `o` | Pide una capa y alterna visible/oculta inmediatamente en la configuración en memoria |
-| `q` | Pide una capa y la elimina de la configuración; no borra el archivo gráfico del disco |
-| `r` | Pide una capa y luego `Nueva posición 1..N:`; la mueve a ese lugar del listado |
-| `0` | Vuelve al menú principal |
+| `a` | Append a PNG/JPG/GIF graphic above previous layers |
+| `v` | Append an avatar; at most one |
+| `e` | Ask for layer number, then edit its form or replace files |
+| `o` | Ask for a layer, then immediately toggle in-memory visibility |
+| `q` | Remove a chosen layer from configuration without deleting its file |
+| `r` | Ask for a layer, then `Nueva posición 1..N:`, moving it within the list |
+| `0` | Return to main menu |
 
-`q` significa **quitar**, no salir del submenú. Las selecciones de capa son
-numeradas desde `1`. El orden del listado define el orden de dibujo; no hay otro
-campo independiente de profundidad o `z-index`.
+`q` means **remove**, not leave the submenu. Layer numbering starts at `1`.
+List order defines drawing order; no independent depth or `z-index` field exists.
 
-#### Formulario de gráfico: `a` o `e` sobre `graphic`
+#### Graphic form: `a` or `e` on `graphic`
 
-Las preguntas van en este orden:
+Prompt order:
 
 1. `Ruta PNG/JPG/GIF [...]`.
 2. `Nombre [...]`.
@@ -708,17 +695,17 @@ Las preguntas van en este orden:
 7. `Conservar proporción (s/n) [...]`.
 8. `Visible (s/n) [...]`.
 
-Para un gráfico nuevo el nombre inicial del menú es `Gráfico`, X/Y son `32`,
-ancho y alto están sin especificar (`-`), proporción y visibilidad valen `s`.
-Introduce una ruta real al agregar: Enter en una ruta vacía no elige un archivo.
+A new graphic defaults to menu name `Gráfico`, X/Y `32`, unspecified dimensions
+(`-`), and `s` for aspect ratio and visibility. Enter a real path: Enter on an
+empty path does not select a file.
 
-En una capa existente, pulsa Enter para mantener su archivo. Para sustituirlo,
-escribe la nueva ruta, que puede ser de otro de los formatos soportados. La capa
-sigue siendo de tipo `graphic`; no se convierte en avatar desde ese formulario.
+For an existing layer, Enter retains its file. Enter a new path to replace it,
+including another supported format. The type remains `graphic`; this form cannot
+convert it to an avatar.
 
-#### Formulario de avatar: `v` o `e` sobre `avatar`
+#### Avatar form: `v` or `e` on `avatar`
 
-Las preguntas van en este orden:
+Prompt order:
 
 1. `GIF reposo [...]`.
 2. `GIF habla [...]`.
@@ -732,165 +719,154 @@ Las preguntas van en este orden:
 10. `Conservar proporción (s/n) [...]`.
 11. `Visible (s/n) [...]`.
 
-Los valores iniciales del menú son nombre `Avatar`, umbral `0.04`, espera `250`,
-X/Y `32`, dimensiones automáticas, proporción y visibilidad activadas. Escribe
-ambas rutas al agregar. Reposo y habla son archivos GIF, no capas separadas.
+Menu defaults are name `Avatar`, threshold `0.04`, release `250`, X/Y `32`,
+automatic dimensions, aspect preservation and visibility enabled. Enter both
+paths when adding. Idle/talking are GIF files, not separate layers.
 
-Después de terminar un formulario vuelve al submenú de capas. La configuración
-se comprueba estructuralmente, pero el archivo se decodifica al validar/grabar;
-que una ruta quede en el listado no significa que ya se haya podido cargar.
+Completing a form returns to the layer submenu. Configuration is structurally
+validated, but files decode when validating/recording. A listed path does not
+mean the resource has already loaded successfully.
 
-### 4.7 `5`: guardar
+### 4.7 `5`: save
 
-Pregunta:
+Prompt:
 
 ```text
 Guardar TOML [ruta/propuesta/perfil.toml]:
 ```
 
-Enter conserva la ruta propuesta. Si no había un nombre asociado, propone
-`perfil.toml` en el directorio actual. Puedes escribir otro archivo, también en
-otra carpeta. Las rutas relativas del **archivo TOML a guardar** se interpretan
-desde el directorio de la terminal.
+Enter retains the proposed path. Without an associated path, `perfil.toml` in the
+current directory is proposed. Another filename/folder can be typed. Relative
+paths for the **TOML being saved** start at the terminal's current directory.
 
-Se crean las carpetas necesarias y se reemplaza el TOML mediante un archivo
-temporal. Si el perfil ya existe, se sobrescribe sin otra confirmación. El
-contenido se normaliza a esquema 2; se reescribe y no conserva los comentarios ni
-la presentación original del archivo. Guardar no copia los recursos gráficos.
+Required folders are created and TOML is replaced through a temporary file.
+Existing profiles are overwritten without another confirmation. Content is
+normalized to schema 2; rewriting does not preserve comments or original layout.
+Saving does not copy graphic resources.
 
-### 4.8 `6`: cargar
+### 4.8 `6`: load
 
-Pregunta:
+Prompt:
 
 ```text
 TOML a cargar:
 ```
 
-Escribe una ruta a un TOML existente. No hay archivo predeterminado para Enter.
-Una ruta relativa se busca desde el directorio actual de la terminal. Si carga
-correctamente, sustituye la configuración en memoria y vuelve al menú principal.
-Los cambios anteriores sin guardar se descartan sin confirmación.
+Enter the path to an existing TOML. Empty Enter has no default file. Relative
+paths start at the terminal's current directory. Successful loading replaces
+in-memory configuration and returns to the main menu. Previous unsaved changes
+are discarded without confirmation.
 
-### 4.9 `7`: validar y mostrar resumen
+### 4.9 `7`: validate and show summary
 
-No pregunta más valores. Si todo se valida, muestra pantalla/resolución/FPS,
-micrófono técnico resuelto, audio del sistema, capas en orden, archivos,
-coordenadas, dimensiones efectivas, visibilidad, sensibilidad del avatar,
-presupuesto RGBA y salida. Luego vuelve al menú principal.
+No more values are requested. Success shows display/resolution/FPS, resolved
+technical microphone ID, system audio, ordered layers, files, coordinates,
+effective dimensions, visibility, avatar sensitivity, RGBA budget and output,
+then returns to the main menu.
 
-No abre una previsualización ni empieza a grabar. Una ruta de salida con timestamp
-puede cambiar al validar de nuevo. Un error se presenta como `Corregir:` y permite
-volver a editar.
+This neither previews nor records. Timestamped output paths may differ on the
+next validation. Errors are shown as `Corregir:` and allow returning to editing.
 
-### 4.10 `8`: grabar y `0`: salir
+### 4.10 `8`: record and `0`: exit
 
-`8` repite la validación completa y muestra el resumen. Después pregunta:
+`8` repeats full validation and displays the summary, then asks:
 
 ```text
 Iniciar grabación (s/n) [n]:
 ```
 
-Enter o `n` no empiezan; `s` inicia la captura. Esta grabación no tiene duración
-fijada desde el menú: vuelve a la terminal y pulsa Ctrl+C para terminar. Cuando
-acaba el cierre, regresa al menú principal. Para volver a grabar con ajustes,
-edítalos antes de iniciar otra captura. Los cambios en memoria usados para grabar
-no se guardan automáticamente en TOML.
+Enter or `n` does not start; `s` starts capture. Menu recording has no fixed
+duration: return to the terminal and press Ctrl+C. Finalization returns to the
+main menu. Edit settings before another capture. In-memory settings used to
+record are not automatically saved to TOML.
 
-`0` en el menú principal sale del programa. No confundirlo con `0` en capas, que
-solo vuelve un nivel.
+`0` in the main menu exits. `0` under layers only goes back one level.
 
-## 5. Capas, geometría y avatar
+## 5. Layers, geometry and avatar
 
-### 5.1 Agregar, reemplazar y ordenar
+### 5.1 Add, replace and order
 
-El conjunto de capas del perfil es la escena actual. Se admiten gráficos y un
-avatar. No hay biblioteca de varias escenas, transiciones ni cambio de escena en
-vivo.
+The profile's layers form the current scene. Graphics and one avatar are
+supported. There is no multi-scene library, transitions or live scene switching.
 
-Para agregar, entra en `4` y usa `a` o `v`. Para reemplazar un gráfico, usa `e`,
-elige su número y cambia `Ruta PNG/JPG/GIF`; conserva con Enter los demás valores
-que no quieras tocar. Para reemplazar los GIF del avatar, edita sus rutas dentro
-de la misma capa.
+To add, use `4`, then `a` or `v`. To replace a graphic, use `e`, select its number
+and change `Ruta PNG/JPG/GIF`; retain other values with Enter. Replace avatar
+GIFs by editing paths inside that same layer.
 
-Mover o escalar significa editar X/Y/ancho/alto mediante `e`. Ocultar significa
-`o` o `Visible = n`. Quitar significa `q`. Reordenar significa `r`: la posición
-`1` queda debajo de las demás y la última queda encima. Una imagen opaca grande
-en una capa superior puede tapar otras.
+Moving/scaling means editing X/Y/width/height with `e`. Hide using `o` or
+`Visible = n`; remove with `q`; reorder with `r`. Position `1` is beneath others
+and the final layer is on top. A large opaque top layer can cover other content.
 
-No hay una opción para duplicar capas ni para cambiar el tipo de una capa. Puedes
-agregar otra con el mismo archivo, o quitar y crear el tipo deseado. Las fuentes
-repetidas no se deduplican en memoria.
+There is no duplicate-layer or change-type option. Add another layer with the
+same file, or remove/recreate it with the desired type. Repeated sources are
+not deduplicated in memory.
 
-### 5.2 Coordenadas y tamaño
+### 5.2 Coordinates and size
 
-El origen `(0, 0)` está en la **esquina superior izquierda del video**. X crece
-hacia la derecha; Y crece hacia abajo. Son píxeles del lienzo grabado, no del
-archivo original ni de la ventana de la terminal.
+Origin `(0, 0)` is the **video's upper-left corner**. X increases rightward and Y
+downward. These are recorded-canvas pixels, not source-image or terminal pixels.
 
-La CLI captura el monitor elegido a su resolución de captura; no expone una
-resolución de salida independiente. Cambiar el monitor, su resolución o su
-orientación puede exigir cambiar las posiciones. Un ancho de capa de `300` es el
-tamaño del gráfico, no una petición de video de 300 píxeles.
+The CLI records the chosen monitor at its capture resolution; it exposes no
+independent output resolution. Changing monitor, resolution or orientation may
+require repositioning layers. Width `300` means graphic width, not 300-pixel video.
 
-| Dimensiones configuradas | Resultado con proporción activada |
+| Configured dimensions | Result with aspect preservation |
 | --- | --- |
-| Ninguna | Ancho 320; altura derivada del archivo |
-| Solo `width` | Deriva la altura |
-| Solo `height` | Deriva el ancho |
-| Ambas | Escala uniforme para caber dentro de esa caja |
+| Neither | Width 320; height derived from the file |
+| Only `width` | Derive height |
+| Only `height` | Derive width |
+| Both | Uniform scale to fit that box |
 
-La caja se alinea en X/Y por arriba/izquierda; no se centra automáticamente ni se
-rellena recortando la imagen. Por ejemplo, un GIF cuadrado con ancho `300` y alto
-`200` se dibuja a **200 × 200**. Puede sobrar espacio a derecha/abajo de la caja
-solicitada.
+The box aligns at X/Y by its upper-left corner, without automatic centering or
+crop-to-fill. A square GIF with width `300` and height `200` draws at
+**200 × 200**, potentially leaving right/bottom space inside the requested box.
 
-En el menú, `-` elimina una dimensión explícita. No escribas `0`: es inválido.
-Para deformar, responde `n` a conservar proporción y especifica ancho y alto.
-Coordenadas permitidas: enteros de `-16384` a `16384`. Dimensiones explícitas:
-enteros de `1` a `16384`. Las derivadas también deben ser positivas y no superar
-16384; pueden ser fraccionarias.
+In the menu, `-` removes an explicit dimension. Do not enter `0`; it is invalid.
+To stretch, answer `n` for aspect preservation and specify width and height.
+Allowed coordinates are integers `-16384`..`16384`; explicit dimensions are
+integers `1`..`16384`. Derived dimensions must also be positive and at most
+16384, but may be fractional.
 
-Se permite colocar parte del gráfico fuera del cuadro con X/Y negativos.
-OpenGL recorta lo que quede fuera; no mueve la capa automáticamente para hacerla
-visible. Una capa completamente fuera puede validar correctamente y no aparecer.
+Negative X/Y can put part of a graphic outside the frame. OpenGL clips it without
+automatically moving the layer into view. A completely offscreen layer may pass
+validation and remain invisible.
 
-### 5.3 Formatos, transparencia y animación
+### 5.3 Formats, transparency and animation
 
-| Formato | Comportamiento |
+| Format | Behavior |
 | --- | --- |
-| PNG | Imagen estática; admite transparencia y alfa parcial |
-| JPG/JPEG | Imagen estática opaca; no admite transparencia |
-| GIF | Animación con transparencia, tiempos por cuadro, disposal y repetición |
+| PNG | Static image with transparency and partial alpha |
+| JPG/JPEG | Opaque static image, no transparency |
+| GIF | Animation with transparency, frame timings, disposal and repetition |
 
-El formato se reconoce por el contenido, no solo por la extensión. APNG, video,
-SVG y texto no están soportados. No hay selector de opacidad, chroma key,
-filtros, rotación ni edición del recurso dentro del programa.
+Content determines the format, not just extension. APNG, video, SVG and text are
+unsupported. There is no opacity selector, chroma key, filter, rotation or
+in-program resource editor.
 
-El alfa del recurso se mezcla sobre la captura. Eso no convierte el video MKV en
-un video con fondo transparente. En GIF, la transparencia es la definida por su
-paleta; para bordes con alfa parcial usa PNG.
+Source alpha is blended over capture; it does not make the MKV background
+transparent. GIF transparency is defined by its palette; use PNG for edges with
+partial alpha.
 
-Los GIF se precargan y se componen respetando cuadros parciales y disposal. Un
-bucle infinito continúa; al terminar una repetición finita se mantiene el último
-cuadro. Un GIF sin extensión de repetición se reproduce una vez. Si la demora de
-un cuadro es cero o no está indicada, la política actual usa **100 ms**; las demás
-se convierten desde las unidades de 10 ms del GIF. No hay control de velocidad o
-bucle en el menú: se toma del archivo.
+GIFs are preloaded and composed with partial-frame/disposal handling. Infinite
+loops continue; finite repetition holds the final frame when finished. Without
+a loop extension, a GIF plays once. A missing/zero frame delay uses the current
+**100 ms** policy; other delays are converted from GIF's 10 ms units. The menu
+has no speed/loop controls: these come from the file.
 
-Una capa oculta sigue validándose y mantiene su caché y texturas. Ocultarla no
-permite usar un archivo inexistente o malformado, ni evita el presupuesto de
-memoria. Para dejar de cargarla, quítala del perfil.
+Hidden layers are still validated and retain caches/textures. Hiding permits
+neither nonexistent/malformed files nor bypassing memory budgets. Remove a layer
+from the profile to stop loading it.
 
-### 5.4 Avatar abajo a la derecha
+### 5.4 Bottom-right avatar
 
-Para un lienzo `W × H`, un elemento efectivo de `w × h` y un margen `m`:
+For canvas `W × H`, effective element size `w × h` and margin `m`:
 
 ```text
 X = W - w - m
 Y = H - h - m
 ```
 
-En **1920 × 1080**, con el avatar cuadrado de **300 × 300** y margen **20**:
+At **1920 × 1080**, with a **300 × 300** square avatar and margin **20**:
 
 ```toml
 x = 1600
@@ -900,46 +876,45 @@ height = 300
 keep_aspect = true
 ```
 
-Estas son coordenadas explícitas, no un anclaje. No existe `bottom-right`, un
-porcentaje de posición o un ajuste automático al cambiar de resolución. Usa las
-dimensiones efectivas mostradas en el resumen para hacer el cálculo. Si el propio
-GIF contiene márgenes transparentes, el dibujo visible puede quedar más separado
-del borde que su lienzo.
+These are explicit coordinates, not an anchor. This classic CLI has no
+`bottom-right`, percentage position or automatic adjustment after resolution
+changes. Use summary effective dimensions for calculations. Transparent margins
+inside the GIF can make visible content appear farther from the edge than its
+canvas.
 
-### 5.5 Reposo, habla, umbral y espera
+### 5.5 Idle, talking, threshold and release
 
-El avatar ocupa una sola posición del listado y comparte X/Y, tamaño y visibilidad
-entre `idle` y `talking`. Ambos archivos deben ser GIF, pero sus lienzos pueden
-tener dimensiones diferentes. La geometría de reposo determina la caja común;
-cada fuente cabe dentro de ella manteniendo su proporción. Si difieren las
-proporciones, puede quedar espacio sin dibujar. Con proporción desactivada se
-estiran a la caja explícita.
+An avatar occupies one list position and shares X/Y, size and visibility between
+`idle` and `talking`. Both must be GIFs, but their canvases may differ. Idle
+geometry defines the common box; each source fits it with its aspect ratio
+preserved. Different aspect ratios can leave empty space. Without aspect
+preservation they stretch to the explicit box.
 
-El detector mide amplitud RMS, no reconoce palabras:
+The detector measures RMS amplitude, not words:
 
-- `threshold` es el nivel mínimo para activar habla: mayor que `0` y hasta `1`.
-- El predeterminado es `0.04`. Bajarlo aumenta la sensibilidad; subirlo la reduce.
-- `release_ms` es el tiempo desde el último bloque sobre el umbral antes de volver
-  a reposo: entre `0` y `5000` ms, predeterminado `250`.
-- El audio del detector es mono float32 a 16 kHz, evaluado en bloques de 20 ms.
-  Esa frecuencia no fija la del audio grabado por GSR.
-- Al cambiar de reposo a habla o viceversa, el GIF entrante reinicia su reloj.
-  Mientras permanece seleccionado, sigue sus propios tiempos y bucle.
+- `threshold` is the minimum talking level, greater than `0` and at most `1`.
+- Default is `0.04`. Lower values increase sensitivity; higher values reduce it.
+- `release_ms` is time since the last above-threshold block before returning idle:
+  `0`..`5000` ms, default `250`.
+- Detector audio is mono float32 at 16 kHz, evaluated in 20 ms blocks. This rate
+  does not set GSR's recorded-audio rate.
+- Switching idle/talking restarts the incoming GIF's clock. While selected, it
+  follows its own timing and loop.
 
-Para ajustar: graba una prueba corta con silencio, voz normal y teclado. Si no
-activa, baja gradualmente el umbral; si se activa con ruido, súbelo. Si cambia de
-estado demasiado rápido entre frases, aumenta la espera. No hay medidor de nivel,
-calibración automática, reconocimiento de voz ni temblor en la versión actual.
-Teclado, ventilador, música captada por el micrófono y ruido pueden activar habla.
+Tune with a short recording containing silence, normal speech and keyboard
+noise. Gradually lower threshold if speech does not activate; raise it for noise
+activation. Increase release if it switches too quickly between phrases. There
+is no level meter, automatic calibration, speech recognition or shake in the
+current version. Keyboard, fan, music reaching the microphone and other noise
+can activate talking.
 
-## 6. Referencia de perfiles TOML
+## 6. TOML profile reference
 
-### 6.1 Ejemplo completo
+### 6.1 Complete example
 
-Este perfil es sintáctica y estructuralmente válido. Para grabar debes elegir un
-nombre real de pantalla y tener los archivos indicados. Guárdalo, por ejemplo,
-como `perfil.toml` en la raíz del proyecto, utilizando los gráficos neutros
-incluidos en `examples/assets/`:
+This profile is syntactically/structurally valid. Recording requires a real display
+name and the listed files. Save it as `perfil.toml` at the project root, for
+example, using neutral graphics included in `examples/assets/`:
 
 ```toml
 schema_version = 2
@@ -951,7 +926,7 @@ fps = 30
 game_audio = true
 microphone = "default_input"
 
-# Primera capa: muestra geométrica debajo del avatar.
+# First layer: geometric sample below the avatar.
 [[layers]]
 name = "Marco"
 kind = "graphic"
@@ -963,7 +938,7 @@ height = 120
 keep_aspect = true
 visible = true
 
-# Última capa: encima del marco.
+# Last layer: above the frame.
 [[layers]]
 name = "Avatar"
 kind = "avatar"
@@ -979,116 +954,114 @@ threshold = 0.04
 release_ms = 250
 ```
 
-`NOMBRE_DE_TU_MONITOR` es un marcador, no un dispositivo válido. Elígelo desde el
-menú o reemplázalo por un identificador de `devices`. Si solo quieres el avatar,
-quita por completo el primer bloque `[[layers]]`; no dejes una capa oculta con un
-archivo de ejemplo que no existe.
+`NOMBRE_DE_TU_MONITOR` is a placeholder, not a valid device. Choose through the
+menu or replace it with an identifier from `devices`. To use only the avatar,
+remove the entire first `[[layers]]` block; do not keep a hidden layer pointing
+to a nonexistent sample file.
 
-También está el [perfil de avatar incluido](../examples/perfil.toml). Su pantalla
-está vacía a propósito para que la elijas en tu equipo; no pasa la validación de
-dispositivos hasta configurarla.
+An [included avatar profile](../examples/perfil.toml) is also available. Its display
+is deliberately empty for selection on your own machine; device validation fails
+until configured.
 
-### 6.2 Campos de nivel superior
+### 6.2 Top-level fields
 
-| Campo | Obligatorio | Predeterminado y reglas |
+| Field | Required | Default and rules |
 | --- | --- | --- |
-| `schema_version` | No, pero conviene escribirlo | Si se omite se interpreta como versión 1 y se importa; al guardar se escribe `2`. Se admiten enteros `1` y `2` |
-| `[recording]` | No | Si se omite se usan los valores de la tabla siguiente; hay que elegir pantalla antes de grabar |
-| `[[layers]]` | No | Cero o más tablas ordenadas; hasta 16 capas, con un máximo de un avatar |
+| `schema_version` | No, but recommended | Omitted means version 1 import; saving writes `2`. Integers `1` and `2` are accepted |
+| `[recording]` | No | Omission uses the next table's defaults; select a display before recording |
+| `[[layers]]` | No | Zero or more ordered tables; up to 16 layers and one avatar |
 
-No añadas claves inventadas. Se rechazan campos desconocidos. `_base` es un dato
-interno del programa y no debe incluirse en un perfil de usuario.
+Unknown keys are rejected; do not invent fields. `_base` is internal program
+data and must not appear in a user profile.
 
-### 6.3 Campos de `[recording]`
+### 6.3 `[recording]` fields
 
-| Campo | Tipo | Predeterminado | Reglas |
+| Field | Type | Default | Rules |
 | --- | --- | --- | --- |
-| `screen` | Texto | `""` | Nombre de monitor anunciado por GSR; vacío requiere elegir uno antes de grabar |
-| `output` | Texto | `"recordings/{timestamp}.mkv"` | Archivo con extensión `.mkv`, ruta absoluta o relativa al TOML |
-| `fps` | Entero | `30` | De 1 a 120 |
-| `game_audio` | Booleano | `true` | Captura la salida de audio predeterminada del sistema |
-| `microphone` | Texto | `"default_input"` | Predeterminado, identificador explícito de entrada o `""` para desactivar |
+| `screen` | String | `""` | GSR-advertised monitor name; empty requires selection before recording |
+| `output` | String | `"recordings/{timestamp}.mkv"` | `.mkv` filename; absolute or relative to TOML |
+| `fps` | Integer | `30` | 1..120 |
+| `game_audio` | Boolean | `true` | Capture the default system audio output |
+| `microphone` | String | `"default_input"` | Default input, explicit input identifier or `""` to disable |
 
-El valor heredado `screen = "screen"` se convierte al monitor concreto cuando
-solo hay uno disponible. Con varios se rechaza por ambigüedad y exige elegir.
-No uses ese alias para indicar «la pantalla donde lancé la terminal».
+Legacy `screen = "screen"` resolves to the concrete monitor only when exactly one
+is available. With several, it is ambiguous and requires selection. It does not
+mean the display where the terminal was launched.
 
-### 6.4 Campos comunes de una capa
+### 6.4 Common layer fields
 
-| Campo | Tipo | Predeterminado | Reglas |
+| Field | Type | Default | Rules |
 | --- | --- | --- | --- |
-| `name` | Texto | `"Capa N"`, N empieza en 1 | Entre 1 y 128 bytes UTF-8; es una etiqueta, no una ruta |
-| `kind` | Texto | `"graphic"` | `"graphic"` o `"avatar"` |
-| `x` | Entero | `32` | Entre -16384 y 16384 |
-| `y` | Entero | `32` | Entre -16384 y 16384 |
-| `width` | Entero, opcional | Sin dimensión explícita | De 1 a 16384; participa en las reglas de proporción |
-| `height` | Entero, opcional | Sin dimensión explícita | De 1 a 16384 |
-| `keep_aspect` | Booleano | `true` | Si es `false`, exige ancho y alto explícitos |
-| `visible` | Booleano | `true` | `false` conserva la capa cargada sin dibujarla |
+| `name` | String | `"Capa N"`, N starting at 1 | 1..128 UTF-8 bytes; label, not path |
+| `kind` | String | `"graphic"` | `"graphic"` or `"avatar"` |
+| `x` | Integer | `32` | -16384..16384 |
+| `y` | Integer | `32` | -16384..16384 |
+| `width` | Optional integer | No explicit dimension | 1..16384; follows aspect-ratio rules |
+| `height` | Optional integer | No explicit dimension | 1..16384 |
+| `keep_aspect` | Boolean | `true` | `false` requires explicit width and height |
+| `visible` | Boolean | `true` | `false` keeps the layer loaded without drawing |
 
-En TOML escribe `true`/`false`, no `s`/`n`. Para una dimensión automática omite la
-línea correspondiente: `width = "-"`, `width = 0` y `width = null` no son válidos.
-Si omites ambas, el ancho efectivo por defecto es 320. Los nombres iniciales del
-menú (`Gráfico`, `Avatar`) pueden diferir del nombre generado al omitirlo en TOML.
+TOML booleans are `true`/`false`, not `s`/`n`. For an automatic dimension omit its
+line: `width = "-"`, `width = 0` and `width = null` are invalid. Omitting both
+means effective default width 320. Initial menu names (`Gráfico`, `Avatar`) can
+differ from names generated when omitted in TOML.
 
-### 6.5 Campos de gráfico y de avatar
+### 6.5 Graphic and avatar fields
 
-Para `kind = "graphic"`:
+For `kind = "graphic"`:
 
-| Campo | Obligatorio | Uso |
+| Field | Required | Purpose |
 | --- | --- | --- |
-| `path` | Sí | Ruta a un PNG, JPG o GIF cargable |
+| `path` | Yes | Path to a loadable PNG, JPG or GIF |
 
-No incluyas `idle`, `talking`, `threshold` ni `release_ms` en un gráfico.
+Do not include `idle`, `talking`, `threshold` or `release_ms` in a graphic.
 
-Para `kind = "avatar"`:
+For `kind = "avatar"`:
 
-| Campo | Obligatorio | Predeterminado y uso |
+| Field | Required | Default and purpose |
 | --- | --- | --- |
-| `idle` | Sí | Ruta al GIF de reposo |
-| `talking` | Sí | Ruta al GIF de habla |
-| `threshold` | No | `0.04`; número finito mayor que cero y hasta uno |
-| `release_ms` | No | `250`; entero de 0 a 5000 ms |
+| `idle` | Yes | Idle GIF path |
+| `talking` | Yes | Talking GIF path |
+| `threshold` | No | `0.04`; finite number greater than zero and at most one |
+| `release_ms` | No | `250`; integer 0..5000 ms |
 
-No incluyas `path` en un avatar. `recording.microphone` no puede estar vacío si hay
-un avatar, incluso si `visible = false`. El orden de los bloques `[[layers]]`
-determina el orden de dibujo; no existe un campo `order`.
+Do not include `path` in an avatar. `recording.microphone` cannot be empty if an
+avatar exists, even with `visible = false`. `[[layers]]` block order determines
+drawing order; no `order` field exists.
 
-### 6.6 Rutas y nombres de salida
+### 6.6 Paths and output names
 
-Hay dos bases distintas:
+There are two different bases:
 
-| Dónde se introduce la ruta | Base de una ruta relativa |
+| Where a path is entered | Relative-path base |
 | --- | --- |
-| Argumento `profile` del comando | Directorio actual de la terminal |
-| `Guardar TOML` y `TOML a cargar` del menú | Directorio actual de la terminal |
-| `path`, `idle`, `talking`, `recording.output` dentro de un perfil | Carpeta del TOML |
-| Rutas de recursos/salida introducidas en el editor | Carpeta base del perfil; sin nombre de perfil, empieza siendo el directorio actual |
+| Command `profile` argument | Terminal's current directory |
+| Menu `Guardar TOML` and `TOML a cargar` | Terminal's current directory |
+| Profile `path`, `idle`, `talking`, `recording.output` | TOML folder |
+| Asset/output paths entered in the editor | Profile base folder; initially current directory if unnamed |
 
-Se aceptan rutas absolutas y expansión de `~`. No se expanden variables como
-`$HOME` escritas dentro del TOML o de una respuesta del menú: usa `~` o la ruta
-real. En un comando de shell, `$HOME` sí lo expande la shell cuando corresponde.
+Absolute paths and `~` expansion are accepted. Variables such as `$HOME` inside
+TOML/menu input are not expanded: use `~` or a real path. The shell does expand
+`$HOME` when appropriate in a shell command.
 
-Ejemplo: si el perfil es `perfiles/minecraft.toml` y contiene
-`idle = "assets/idle.gif"`, se busca `perfiles/assets/idle.gif`, no
-`examples/assets/idle.gif` en la raíz del proyecto. Ejecutar el script desde otra carpeta no
-cambia esa interpretación.
+For example, `perfiles/minecraft.toml` containing `idle = "assets/idle.gif"` looks
+for `perfiles/assets/idle.gif`, not project-root `examples/assets/idle.gif`.
+Launching from another folder does not change that interpretation.
 
-Al guardar, el programa escribe rutas relativas a la ubicación nueva del TOML,
-conservando el destino real. «Guardar como» en otra carpeta puede introducir
-`../`: no traslada las imágenes ni cambia automáticamente la carpeta efectiva
-de videos. Después de guardar, las nuevas rutas relativas que introduzcas usan
-la nueva carpeta del perfil como base.
+Saving writes paths relative to the TOML's new location while preserving actual
+targets. Save as in another folder may introduce `../`: it neither moves images
+nor automatically changes the effective video folder. New relative paths entered
+after saving use the new profile directory as base.
 
-`{timestamp}` se sustituye por fecha y hora UTC con microsegundos al preparar la
-captura, con formato como `20261109T041847.260757Z`. No es una variable de shell.
-Es la única plantilla admitida: no existen `{scene}`, `{game}` o `{counter}`.
-Un nombre fijo funciona, pero la siguiente captura se rechaza si ya existe el
-video o sus archivos de log/informe. No hay sobrescritura automática de videos.
+`{timestamp}` becomes UTC date/time with microseconds when preparing capture,
+such as `20261109T041847.260757Z`. It is not a shell variable. It is the only
+supported template: no `{scene}`, `{game}` or `{counter}`. A fixed name works,
+but the next capture is rejected if video or log/report already exists. Videos
+are not automatically overwritten.
 
-### 6.7 Reutilizar y compartir
+### 6.7 Reuse and sharing
 
-Para compartir un perfil con sus gráficos, conserva una estructura relativa:
+To share a profile and graphics, retain a relative structure:
 
 ```text
 mi-perfil/
@@ -1100,25 +1073,25 @@ mi-perfil/
   recordings/
 ```
 
-En ese TOML usa `assets/marco.png`, `assets/idle.gif`, `assets/talking.gif` y
-`recordings/{timestamp}.mkv`. Copia toda la carpeta. Las fuentes no se incrustan
-en el TOML ni en un paquete del compositor.
+In that TOML use `assets/marco.png`, `assets/idle.gif`, `assets/talking.gif` and
+`recordings/{timestamp}.mkv`. Copy the entire folder. Sources are not embedded
+in TOML or a compositor package.
 
-En la otra máquina abre el editor, elige su pantalla y micrófono, guarda y valida.
-Los identificadores de hardware de un equipo no son portables. Un perfil y sus
-imágenes tampoco incluyen el programa, el GSR nativo ni sus drivers.
+On the other machine, open the editor, select its display/microphone, save and
+validate. Hardware identifiers are not portable. Profiles/images do not include
+the program, native GSR or drivers.
 
-Para reutilizar sin cambiar archivos:
+To reuse without changing files:
 
 ```bash
 python3 scripts/compositor.py edit mi-perfil/perfil.toml
 python3 scripts/compositor.py record mi-perfil/perfil.toml --seconds 30
 ```
 
-### 6.8 Compatibilidad anterior
+### 6.8 Backward compatibility
 
-No se encontraron perfiles TOML anteriores en el árbol al implementar esta CLI.
-La importación disponible admite esquema 1 con un elemento único:
+No earlier TOML profiles were found in the tree when this CLI was implemented.
+The available importer supports schema 1 with a single element:
 
 ```toml
 schema_version = 1
@@ -1135,139 +1108,136 @@ width = 300
 visible = true
 ```
 
-En `[element]` se acepta `path` en lugar de `media`. También se admite `media`
-en la raíz; no mezcles el elemento antiguo con `layers`. La estructura actual
-`recording`/`layers` con versión 1 también se normaliza a 2. Al guardar se escribe
-el formato actual. No se garantiza importar otros formatos antiguos desconocidos.
+`[element]` accepts `path` instead of `media`; root-level `media` is also accepted.
+Do not mix the old element and `layers`. Current `recording`/`layers` structure
+with version 1 also normalizes to 2. Saving writes the current format. Other
+unknown older formats are not guaranteed importable.
 
-Los scripts de elemento único y sus variables de entorno siguen siendo una vía
-separada. `compositor.py record` utiliza el perfil y limpia las variables de
-entorno `GSR_RUST_*` y `GSR_OVERLAY_*` del proceso hijo para que no alteren la
-escena guardada.
+Single-element scripts and environment variables remain a separate path.
+`compositor.py record` uses the profile and clears `GSR_RUST_*` and
+`GSR_OVERLAY_*` from the child environment so they do not alter the saved scene.
 
-## 7. Grabación, salida y audio
+## 7. Recording, output and audio
 
-### 7.1 Pantalla y ajustes efectivos
+### 7.1 Display and effective settings
 
-El monitor se selecciona por su nombre guardado. No depende del monitor donde
-abriste la terminal ni de cuál tenga el foco. La captura de monitor de este flujo
-usa GSR/KMS; no se solicita captura mediante portal COSMIC.
+The stored monitor name selects capture, not the display where the terminal
+opened or where focus currently is. This monitor path uses GSR/KMS and does not
+request capture through the COSMIC portal.
 
-Estos ajustes están expuestos:
+Exposed settings:
 
-- Monitor de captura.
-- Ruta y nombre del archivo MKV.
-- FPS, de 1 a 120.
-- Audio del sistema activado/desactivado y elección de micrófono.
-- Capas y avatar según el perfil.
+- Capture monitor.
+- MKV output path/name.
+- FPS, 1..120.
+- System-audio on/off and microphone selection.
+- Profile layers and avatar.
 
-Estos ajustes están fijados en la implementación actual:
+Fixed implementation settings:
 
-| Ajuste | Valor enviado a GSR |
+| Setting | Value sent to GSR |
 | --- | --- |
 | Video | `-k h264` |
-| Calidad | `-q very_high` |
-| Codificador | `-encoder gpu` |
-| Respaldo por CPU | `-fallback-cpu-encoding no` |
-| Modo de cuadros | `-fm cfr` |
-| Contenedor admitido por el perfil | MKV |
+| Quality | `-q very_high` |
+| Encoder | `-encoder gpu` |
+| CPU fallback | `-fallback-cpu-encoding no` |
+| Frame mode | `-fm cfr` |
+| Profile container | MKV |
 
-No hay opciones de bitrate, codec de audio, frecuencia de audio grabado, resolución
-independiente, HDR, captura de ventana, selección de aplicación de audio, replay,
-streaming ni pausa en esta CLI. Las opciones de GSR no expuestas no se pueden
-pasar como argumentos adicionales a `compositor.py`.
+This CLI exposes no bitrate, audio-codec/rate, independent resolution, HDR,
+window capture, application-audio selection, replay, streaming or pause options.
+Unexposed GSR options cannot be passed as extra `compositor.py` arguments.
 
-### 7.2 Micrófono y audio del juego
+### 7.2 Microphone and system audio
 
-El listado cruza las entradas que GSR conoce con las fuentes de `pactl`,
-excluyendo monitores de salida. Puedes elegir:
+The list intersects GSR-known inputs with `pactl` sources, excluding output
+monitors. Choose:
 
-- `default_input`: se resuelve al validar/iniciar a un identificador concreto.
-- Una entrada explícita: se conserva su identificador, aunque cambie de orden.
-- Ninguna entrada: `microphone = ""`; no es compatible con tener un avatar.
+- `default_input`: resolved to a concrete identifier at validation/start.
+- An explicit input: retains its identifier even if list order changes.
+- No input: `microphone = ""`, incompatible with an avatar.
 
-La misma entrada resuelta se usa para grabar voz y activar el avatar. No hay una
-opción para escoger micrófonos distintos para esas funciones. Si una entrada
-explícita desaparece, se informa antes de grabar y debes elegir otra; no se
-sustituye silenciosamente por el predeterminado.
+The same resolved input records voice and drives the avatar; separate microphones
+cannot be selected for these functions. If an explicit input disappears, it is
+reported before recording and another must be chosen, without silently falling
+back to the default.
 
-`game_audio = true` captura la salida predeterminada del sistema: puede incluir
-Minecraft, música, notificaciones y otras aplicaciones. No aísla únicamente el
-juego. Con voz y sistema activos, GSR recibe una fuente combinada:
+`game_audio = true` captures default system output, which may include any
+application, music and notifications. It does not isolate a game. With microphone
+and system audio enabled, GSR receives one combined source:
 
 ```text
 default_output|device:IDENTIFICADOR_DEL_MICROFONO
 ```
 
-Se graba una pista mezclada; el menú no permite pistas separadas ni regular el
-volumen individual. El umbral del avatar **no es un control de volumen** y no
-modifica el audio guardado.
+This creates one mixed track; the menu exposes neither separate tracks nor
+individual volume controls. Avatar threshold **is not a volume control** and
+does not modify recorded sound.
 
-El detector abre una segunda captura de la misma entrada mediante `parec`.
-GSR conserva sus propios relojes de audio/video. La frecuencia mono de 16 kHz del
-detector no se aplica al audio del archivo; la CLI no fija sus parámetros mediante
-`-ac`, `-ab` o una frecuencia de muestreo.
+The detector opens a second capture of the same input through `parec`. GSR keeps
+its own audio/video clocks. Detector mono 16 kHz does not set file-audio rate;
+the CLI does not configure it through `-ac`, `-ab` or a sample-rate argument.
 
-No cambies dispositivos durante una captura. No hay reconexión automática. Si se
-cierra la tubería del detector, se desactiva el overlay, se escribe un diagnóstico
-y el CLI marca el resultado incompleto al finalizar. No hay watchdog si el
-servidor deja de entregar audio sin cerrar la tubería.
+Do not switch devices during capture: there is no automatic reconnection. A
+closed detector pipe disables the overlay, logs a diagnostic and causes the CLI
+to mark the result incomplete at the end. There is no watchdog if the server
+stops delivering samples without closing the pipe.
 
-### 7.3 Iniciar y detener
+### 7.3 Starting and stopping
 
-| Forma de iniciar | Forma de terminar |
+| Start method | Stop method |
 | --- | --- |
-| Menú `8`, luego `s` | Ctrl+C en la terminal; después vuelve al menú |
-| `record perfil.toml --seconds 30` | Parada automática o Ctrl+C antes |
-| `record perfil.toml` | Ctrl+C; después vuelve a la shell |
+| Menu `8`, then `s` | Ctrl+C in the terminal; return to menu |
+| `record perfil.toml --seconds 30` | Automatic stop or earlier Ctrl+C |
+| `record perfil.toml` | Ctrl+C; return to shell |
 
-Sin `--seconds`, la CLI no impone un plazo de 7200 segundos. Ese límite se aplica
-al argumento de duración fija. El espacio en disco, los dispositivos y el sistema
-siguen limitando la sesión.
+Without `--seconds`, no 7200-second deadline is imposed. That limit applies to
+the fixed-duration argument. Disk space, devices and the system still limit
+session length.
 
-No hay cuenta atrás ni inicio programado. Conserva la terminal accesible para
-poder detener. Espera al cierre antes de abrir o mover el archivo.
+There is no countdown or scheduled start. Keep the terminal accessible for
+stopping. Wait for finalization before opening/moving the output.
 
-### 7.4 Archivos y comprobación final
+### 7.4 Files and final checks
 
-Para una salida `grabacion.mkv` se crean:
+For output `grabacion.mkv`, these are created:
 
-| Archivo | Contenido |
+| File | Contents |
 | --- | --- |
-| `grabacion.mkv` | Video y audio configurado |
-| `grabacion.mkv.gsr.log` | Salida y diagnósticos del proceso GSR/plugin |
-| `grabacion.mkv.report.json` | Comando, hashes del build, escena efectiva, código de salida, tiempo, metadatos de ffprobe y estado `completed` |
+| `grabacion.mkv` | Video and configured audio |
+| `grabacion.mkv.gsr.log` | GSR/plugin output and diagnostics |
+| `grabacion.mkv.report.json` | Command, build hashes, effective scene, exit code, timing, ffprobe metadata and `completed` state |
 
-El informe se escribe al finalizar el proceso y sus comprobaciones, no es un
-registro de progreso en vivo ni una medición de CPU/RAM de la escena.
+The report is written after process completion and checks; it is neither live
+progress nor a scene CPU/RAM measurement.
 
-El CLI comprueba salida no vacía, retorno del proceso, carga/cierre del plugin y
-streams de video/audio esperado. Si falla, conserva el archivo parcial e indica
-qué log/informe revisar. Una interrupción muy temprana o un fallo al lanzar GSR
-puede dejar un archivo vacío o no llegar a generar el informe.
+The CLI checks nonempty output, process exit, plugin load/unload and expected
+video/audio streams. Failure retains partial output and identifies the log/report
+to inspect. Very early interruption or GSR-launch failure may leave an empty file
+or no report.
 
-Puedes inspeccionar un archivo manualmente:
+Inspect a file manually with:
 
 ```bash
 ffprobe -v error -show_streams -show_format -of json "recordings/grabacion.mkv"
 ```
 
-Sustituye la ruta por la impresa en `Guardado:`. La presencia de un stream de audio
-no demuestra que se oiga voz; duración y FPS tampoco demuestran ausencia de
-congelamientos, duplicados o desincronización. Reproduce el resultado.
+Replace the path with the one printed by `Guardado:`. An audio stream does not
+prove audible voice; duration/FPS do not prove freedom from freezes, duplicates
+or drift. Play the result.
 
-## 8. Diagnóstico
+## 8. Troubleshooting
 
-Los errores de configuración suelen empezar por `Corregir:`. En el editor,
-corrige el valor y repite `7`. En un comando sin menú, el programa termina con
-error; abre `edit`, corrige y guarda antes de volver a grabar.
+Configuration errors usually begin with `Corregir:`. In the editor, fix the value
+and repeat `7`. A direct command exits on failure; use `edit`, correct and save
+before recording again.
 
-### 8.1 GSR o plugin no disponibles
+### 8.1 GSR or plugin unavailable
 
-**Síntoma:** `Falta gpu-screen-recorder en PATH`, `build: ejecuta bash
-scripts/build-rust-overlay.sh` o error de hash/ABI.
+**Symptom:** `Falta gpu-screen-recorder en PATH`, `build: ejecuta bash
+scripts/build-rust-overlay.sh`, or a hash/ABI error.
 
-**Comprueba:**
+**Check:**
 
 ```bash
 command -v gpu-screen-recorder
@@ -1277,18 +1247,18 @@ ls -l build/overlay-rust.so build/overlay-rust.build.json \
 git -C third_party/gpu-screen-recorder rev-parse HEAD
 ```
 
-Si faltan artefactos, compila con `bash scripts/build-rust-overlay.sh`. Si falla
-por caché Cargo, usa `cargo fetch --manifest-path rust/Cargo.toml --locked` con
-red y repite. Si GSR y el manifiesto no coinciden, revisa qué binario devuelve
-`command -v`, el commit y el build local instalado. No edites hashes para saltarte
-la comprobación: alinea las compilaciones y regenera el manifiesto.
+Build missing artifacts with `bash scripts/build-rust-overlay.sh`. For missing
+Cargo cache, run `cargo fetch --manifest-path rust/Cargo.toml --locked` with
+network access, then repeat. If GSR/manifest differ, check the binary returned
+by `command -v`, commit and installed local build. Do not edit hashes to bypass
+verification; align builds and regenerate the manifest.
 
-### 8.2 Pantalla ausente o sesión gráfica inaccesible
+### 8.2 Missing display or inaccessible graphical session
 
-**Síntoma:** `recording.screen: '...' no disponible`, GSR no anuncia monitores o
-aparecen errores de conexión al servidor Wayland.
+**Symptom:** `recording.screen: '...' no disponible`, no advertised monitors or
+Wayland-server connection errors.
 
-**Comprueba en una terminal de COSMIC, como usuario normal:**
+**Check from a COSMIC terminal as a normal user:**
 
 ```bash
 printf 'Tipo de sesión: %s\nWayland: %s\n' "$XDG_SESSION_TYPE" "$WAYLAND_DISPLAY"
@@ -1297,18 +1267,18 @@ gpu-screen-recorder --list-capture-options
 python3 scripts/compositor.py devices
 ```
 
-Si el monitor cambió de nombre o fue desconectado, entra en `1` y vuelve a
-elegir. Si el perfil antiguo tiene `screen` y hay varios monitores, selecciona
-uno concreto. Si falla la conexión gráfica o no hay acceso a DRM, un cambio de
-X/Y o `--assets-only` no resuelve la captura. Revisa sesión, driver y helper KMS;
-no ejecutes el compositor con `sudo` para intentar suplirlo.
+If a monitor was renamed/disconnected, select it again with `1`. If a legacy
+profile uses `screen` with multiple monitors, choose a concrete one. Graphic
+connection/DRM failures are not fixed by changing X/Y or using `--assets-only`.
+Check session, driver and KMS helper; do not try to compensate with sudo on the
+compositor.
 
-### 8.3 Micrófono ausente o desconectado
+### 8.3 Missing or disconnected microphone
 
-**Síntoma:** `recording.microphone: '...' no está disponible como entrada` o no
-se pudo capturar audio de esa fuente.
+**Symptom:** `recording.microphone: '...' no está disponible como entrada`, or
+failure to capture samples from the source.
 
-**Comprueba:**
+**Check:**
 
 ```bash
 gpu-screen-recorder --list-audio-devices
@@ -1317,80 +1287,76 @@ pactl get-default-source
 python3 scripts/compositor.py devices
 ```
 
-Conecta el dispositivo y vuelve a consultar. En `edit`, opción `2`, selecciona
-la entrada actual o el predeterminado y guarda. El nombre comercial mostrado no
-es el identificador que se escribe manualmente en TOML. Si el predeterminado es
-un monitor de salida, no se acepta como entrada de micrófono.
+Connect the device and query again. In `edit`, option `2`, choose the current
+input/default and save. The displayed commercial name is not the technical
+identifier used in TOML. A default output monitor is not accepted as microphone
+input.
 
-Si falta `pactl` o `parec`, revisa `pulseaudio-utils`. Si falla `pactl info`,
-comprueba tu servicio de audio y la sesión de usuario antes de cambiar el perfil.
+If `pactl`/`parec` is missing, check `pulseaudio-utils`. If `pactl info` fails,
+check the audio service and user session before changing the profile.
 
-### 8.4 GIF inexistente, inválido o demasiado grande
+### 8.4 Missing, invalid or oversized GIF
 
-**Síntoma:** `layers[N].path`, `idle` o `talking` indica archivo no regular, o el
-verificador muestra un error de cabecera, GIF truncado, disposal o presupuesto.
+**Symptom:** `layers[N].path`, `idle` or `talking` reports a nonregular file, or
+the validator reports header, truncated-GIF, disposal or budget errors.
 
-**Comprueba:**
+**Check:**
 
 ```bash
 python3 scripts/compositor.py check perfil-minecraft.toml --assets-only
 ls -l examples/assets/idle.gif examples/assets/talking.gif
 ```
 
-Comprueba la base de las rutas: se leen desde la carpeta del TOML. Para una capa
-gráfica puedes cambiar el archivo con `4`, `e`. Para el avatar cambia sus dos
-rutas en ese formulario. No basta cambiar la extensión para convertir un archivo.
-Ocultar no evita validarlo: reemplázalo por un recurso válido o quita la capa.
+Check path bases: sources resolve from the TOML folder. For graphics use `4`,
+`e`; for avatars edit both paths in that form. Renaming an extension does not
+convert a file. Hiding does not bypass validation: replace the resource or
+remove its layer.
 
-Si supera el presupuesto, reduce dimensiones o cuadros **en el archivo original**
-con una herramienta externa o usa menos capas. Reducir solo `width`/`height` en
-el perfil cambia el dibujo, no el coste de la precarga de la imagen fuente.
+If over budget, reduce dimensions/frame count **in the source file** using an
+external tool, or use fewer layers. Profile `width`/`height` only changes drawing,
+not source-image preload cost.
 
-### 8.5 Avatar que no cambia, siempre habla o vuelve demasiado rápido
+### 8.5 Avatar never changes, always talks or returns too quickly
 
-**Síntoma:** siempre se ve el mismo estado, o reacciona al teclado/ruido.
+**Symptom:** only one state appears, or keyboard/noise activates it.
 
-Comprueba en este orden:
+Check in order:
 
-1. La capa debe tener `kind = "avatar"`, no ser un gráfico apuntando solo a idle.
-2. Debe ser visible y estar dentro del cuadro, sin otra capa opaca encima.
-3. Comprueba el micrófono concreto mostrado por `check` y su silencio/ganancia en
-   la configuración de audio del sistema.
-4. Usa GIF de reposo y habla visualmente distintos; no apuntes ambos al mismo
-   archivo si quieres distinguir el cambio.
-5. Edita el umbral y la espera; guarda y prueba otra grabación corta.
-6. Revisa el `.gsr.log` si aparece un diagnóstico `gsr-rust:` o de `parec`.
+1. Layer must be `kind = "avatar"`, not a graphic pointing only to idle.
+2. It must be visible, on canvas and not covered by another opaque layer.
+3. Check the concrete microphone shown by `check`, plus mute/gain in system audio.
+4. Use visually distinct idle/talking GIFs; pointing both to one file hides state changes.
+5. Edit threshold/release, save and make another short recording.
+6. Inspect `.gsr.log` for `gsr-rust:` or `parec` diagnostics.
 
-Baja el umbral si la voz no activa; súbelo si activa el ruido. Aumenta
-`release_ms` si vuelve demasiado pronto a reposo. No hay un medidor ni una prueba
-interactiva de nivel dentro del menú. Un GIF con cuadros muy largos puede parecer
-quieto aunque el reloj y el estado funcionen.
+Lower threshold for missed speech, raise it for noise activation. Increase
+`release_ms` if idle returns too soon. The menu has no level meter or interactive
+level test. Long GIF frames can look static even when clock/state are working.
 
-### 8.6 Capa fuera del cuadro, deformada o con tamaño inesperado
+### 8.6 Offscreen, distorted or unexpectedly sized layer
 
-**Síntoma:** no aparece, queda cortada, demasiado pequeña o no llena la caja.
+**Symptom:** missing, clipped, too small or not filling its box.
 
-Ejecuta `check` para ver las dimensiones efectivas. Compara X/Y con la resolución
-del monitor elegido. Usa `4`, `e` para corregirlas; `4`, `o` si está oculta y `r`
-si está detrás de otra capa. Para una prueba fácil, colócala en X/Y `32`/`32` y
-ancho `300` con alto automático (`-`).
+Run `check` for effective dimensions and compare X/Y against selected monitor
+resolution. Use `4`, `e` to correct; `4`, `o` for hidden state and `r` if behind
+another layer. A simple test is X/Y `32`/`32`, width `300` and automatic height
+(`-`).
 
-Con proporción activada no siempre se llenan ambas dimensiones. Si una dimensión
-heredada te limita, bórrala con `-`. Para el avatar, reposo fija la caja común.
-No hay anclaje automático a la esquina y no se valida que el elemento sea visible
-dentro del lienzo.
+Aspect preservation need not fill both dimensions. Remove an inherited limiting
+dimension with `-`. Idle defines the avatar's shared box. This CLI has no corner
+anchoring and does not validate that the element is visible within the canvas.
 
-### 8.7 Falta de audio o audio equivocado
+### 8.7 Missing or wrong audio
 
-**Síntoma:** falta la voz, el juego, ambos o se grabó otra aplicación.
+**Symptom:** missing voice, system sound, both, or another application's sound.
 
-Revisa el resumen y estos campos:
+Review the summary and fields:
 
-- `game_audio = true` para audio de la salida predeterminada.
-- `microphone` no vacío para voz; el avatar no activa por sí mismo otra fuente.
-- Predeterminado del sistema correcto, dispositivo sin silenciar y volumen útil.
+- `game_audio = true` for default-output sound.
+- Nonempty `microphone` for voice; the avatar does not enable another source itself.
+- Correct system default, unmuted device and useful volume.
 
-Comprueba fuentes y el archivo:
+Check sources and output:
 
 ```bash
 pactl info
@@ -1398,23 +1364,21 @@ gpu-screen-recorder --list-audio-devices
 ffprobe -v error -show_streams -of json "recordings/grabacion.mkv"
 ```
 
-Si hay una pista pero se oye silencio, el éxito de ffprobe no descarta un problema
-de selección, muteo o ganancia. Cambia la entrada desde `2` y revisa la salida
-predeterminada del sistema. El juego no se captura de forma aislada: otras
-aplicaciones también pueden sonar. No hay mezclador, ganancia ni pistas separadas
-en esta CLI.
+An audio track containing silence can still pass ffprobe; selection, mute or gain
+may be wrong. Change input with `2` and review default system output. System audio
+is not isolated to one application. This CLI has no mixer, gain or separate tracks.
 
-### 8.8 El archivo no aparece, está vacío o la grabación se marca incompleta
+### 8.8 Missing/empty output or incomplete recording
 
-**Síntoma:** no aparece `Guardado:`, el comando termina con `Corregir:`, o el video
-no está en la carpeta esperada.
+**Symptom:** no `Guardado:`, a command ends with `Corregir:`, or output is not in
+the expected folder.
 
-Lee la línea `Salida:` y recuerda que el destino relativo depende del TOML. Un
-perfil en `perfiles/` con salida `recordings/...` escribe bajo
-`perfiles/recordings/`, salvo que la ruta se haya conservado mediante «guardar como».
-El nombre del `check` anterior puede ser distinto por `{timestamp}`.
+Read `Salida:` and remember output paths are TOML-relative. A profile in
+`perfiles/` with `recordings/...` writes below `perfiles/recordings/`, unless Save
+as preserved a different original target. A previous `check` filename may differ
+because of `{timestamp}`.
 
-Comprueba la carpeta real, permisos, espacio y archivos auxiliares:
+Check the actual folder, permissions, free space and auxiliary files:
 
 ```bash
 ls -lt recordings/
@@ -1423,75 +1387,71 @@ cat "recordings/grabacion.mkv.gsr.log"
 cat "recordings/grabacion.mkv.report.json"
 ```
 
-Adapta las rutas. Si falló antes de lanzar GSR, puede no haber video ni log.
-Si falló el lanzamiento, puede quedar un archivo de cero bytes. Si GSR llegó a
-capturar, se conserva el archivo parcial y, cuando se completa el manejo del
-resultado, se escribe el informe. Un nombre fijo ya usado se rechaza; elige otro
-o usa `{timestamp}`. Si también existen log/informe con ese nombre se rechaza.
+Adapt the paths. Failure before GSR launch may create neither video nor log.
+Launch failure can leave a zero-byte file. If GSR captured anything, partial video
+is retained and a report is written when result handling completes. Existing
+fixed names, including existing log/report names, are rejected; choose another
+or use `{timestamp}`.
 
-Para problemas de codificador:
+For encoder issues:
 
 ```bash
 gpu-screen-recorder --info
 ```
 
-Se exige H.264 GPU. No hay respaldo automático a CPU. Si el sistema no anuncia
-esa capacidad, hay que resolver el driver/compatibilidad o revisar el entorno;
-el perfil no ofrece otra elección de codec. Una pantalla negra con gráficos
-visibles tampoco demuestra captura correcta: conserva el log y comprueba GSR en
-la sesión objetivo antes de atribuirlo al archivo GIF.
+H.264 GPU encoding is required; there is no automatic CPU fallback. If it is not
+advertised, resolve driver/compatibility/environment: the profile offers no
+alternative codec. A black screen with visible graphics does not prove capture
+works. Retain the log and check GSR in the target session before blaming the GIF.
 
-## 9. Límites y alcance de las pruebas
+## 9. Limits and test coverage
 
-### 9.1 Límites actuales
+### 9.1 Current limits
 
-| Recurso o función | Límite |
+| Resource or feature | Limit |
 | --- | --- |
-| Capas por perfil | 16, incluido el avatar |
-| Avatares | Uno; dos fuentes GIF en una capa |
-| TOML y manifiesto interno | Hasta 128 KiB cada uno |
-| Archivo gráfico comprimido | Hasta 8 MiB por fuente |
-| Dimensiones de fuente | De 1 a 4096 por eje, además de los presupuestos de bytes |
-| Imagen RGBA / caché de un GIF | Hasta 16 MiB |
-| Cuadros de un GIF | Hasta 1024 |
-| Temporales gestionados del GIF | Hasta 8 MiB por decoder |
-| Suma RGBA precargada de la escena | Hasta 64 MiB; cuenta ocultos y ambos GIF del avatar |
-| JPEG | Hasta 64 scans; sin promesa de gestión ICC ni orientación EXIF automática |
-| Composición | SDR de 8 bits; HDR rechazado |
+| Layers per profile | 16, including the avatar |
+| Avatars | One; two GIF sources in one layer |
+| TOML and internal manifest | Up to 128 KiB each |
+| Compressed graphic file | Up to 8 MiB per source |
+| Source dimensions | 1..4096 per axis, also subject to byte budgets |
+| RGBA image / one GIF cache | Up to 16 MiB |
+| GIF frames | Up to 1024 |
+| Managed GIF temporaries | Up to 8 MiB per decoder |
+| Total preloaded scene RGBA | Up to 64 MiB, including hidden layers and both avatar GIFs |
+| JPEG | Up to 64 scans; no promise of ICC management or automatic EXIF orientation |
+| Composition | 8-bit SDR; HDR rejected |
 
-El presupuesto RGBA no es un límite de RAM total. Hay texturas, buffers de GSR,
-memoria del driver, allocator y temporales. Al rechazar una capa por exceder el
-total, esa capa adicional puede haber sido decodificada temporalmente. Los
-recursos repetidos se cargan por separado. No se garantiza una cifra de 150 MB
-ni un consumo inferior a OBS para una escena que no se haya comparado.
+RGBA budget is not total RAM: textures, GSR buffers, driver memory, allocator and
+temporaries add costs. A layer rejected for exceeding the total may already have
+been temporarily decoded. Repeated resources load separately. Neither 150 MB nor
+lower consumption than OBS is guaranteed for an unmeasured scene.
 
-Se carga y decodifica antes de dibujar. `draw` no lee archivos ni vuelve a
-decodificar; el GIF solo actualiza su textura cuando cambia el cuadro. La
-configuración queda fija durante la captura. Este menú clásico no es una TUI de
-pantalla completa; para eso está la [interfaz Trama](tui.md). No hay GUI,
-previsualización, edición en vivo, texto, streaming, temblor o gestión de múltiples
-escenas. El JSON temporal de la escena es interno, no otro archivo que el usuario
-tenga que administrar.
+Loading/decoding precedes drawing. `draw` neither reads files nor decodes again;
+GIF textures update only on frame changes. Configuration is fixed during capture.
+This classic menu is not a full-screen TUI; use [Trama's interface](tui.md) for
+that. There is no GUI, preview, live editing, text, streaming, shake or multi-scene
+management. Temporary scene JSON is internal, not another user-managed file.
 
-### 9.2 Qué se comprobó y qué queda pendiente
+### 9.2 What was checked and what remains
 
-| Evidencia | Alcance |
+| Evidence | Coverage |
 | --- | --- |
-| Ayuda real de la CLI | Sintaxis de los cuatro subcomandos y sus opciones |
-| Pruebas de perfiles/CLI | Guardar/cargar, rutas relativas y Unicode, menú de capas, orden/visibilidad, importación v1, validación de recursos y presupuesto |
-| Errores simulados de dispositivos | Micrófono explícito ausente sin fallback y parsing de respuestas de GSR/PulseAudio; no equivalen a desconectar un micrófono físico |
-| Recursos inválidos | GIF inexistente y JPEG malformado, también estando oculto |
-| Hosts EGL/OpenGL con llvmpipe | Píxeles, transparencia, orden, recorte, animación, estado GL, cierre y barreras de panic; no es Iris Xe |
-| Avatar con PCM sintético | Umbral, espera y cambio de GIF, incluyendo fuentes con dimensiones distintas |
-| Runner con proceso simulado | Guardar/cargar un TOML, generar un MKV real con color/audio sintéticos por FFmpeg, detenerlo por señal e inspeccionarlo; no es captura real por GSR |
+| Actual CLI help | Four subcommands and their syntax/options |
+| Profile/CLI tests | Save/load, relative/Unicode paths, layer menu, order/visibility, v1 import, assets and budgets |
+| Simulated device errors | Missing explicit microphone without fallback, GSR/PulseAudio response parsing; not physical unplugging |
+| Invalid resources | Missing GIF and malformed JPEG, including hidden state |
+| EGL/OpenGL hosts with llvmpipe | Pixels, transparency, order, clipping, animation, GL state, shutdown and panic barriers; not Iris Xe |
+| Avatar with synthetic PCM | Threshold, release and GIF switching, including differently sized sources |
+| Simulated process runner | Save/load TOML, produce real MKV with FFmpeg synthetic color/audio, signal stop and inspect; not real GSR capture |
 
-Las pruebas automatizadas usan dispositivos simulados y GL por software; no
-certifican acceso a KMS ni audio físico. Valida en la sesión COSMIC del equipo
-objetivo: selección de monitor/entrada, video, audio del sistema y micrófono,
-respuesta del avatar, estabilidad y recursos durante una sesión prolongada.
-Una prueba de 30 s es el primer paso, no una certificación de rendimiento.
+Automated tests use simulated devices/software GL, not KMS access or physical
+audio certification. Validate in the target COSMIC session: monitor/input
+selection, video, system/microphone audio, avatar response, stability and resources
+during an extended session. A 30-second test is a first step, not a performance
+certification.
 
-Para ejecutar las comprobaciones del proyecto desde su raíz:
+To run checks from the project root:
 
 ```bash
 bash scripts/check-rust-overlay.sh
@@ -1499,37 +1459,36 @@ CARGO_TARGET_DIR=build/rust-target cargo clippy --manifest-path rust/Cargo.toml 
   --offline --locked --all-targets --all-features -- -D warnings
 ```
 
-La suite completa compila artefactos de prueba separados y usa Pillow, FFmpeg y
-GL por software. `clippy` requiere ese componente de la toolchain. No graba tu
-pantalla para sustituir la prueba manual en COSMIC.
+The full suite builds separate test artifacts and uses Pillow, FFmpeg and
+software GL. `clippy` needs that toolchain component. It does not record your
+screen to replace manual COSMIC acceptance.
 
-La suite prepara la referencia C desde sus fuentes y genera su manifiesto; no
-necesita recuperar un binario histórico. Las pruebas nuevas usan muestras neutras
-y no abren perfiles locales del desarrollador. La aplicación utiliza el plugin
-Rust; la referencia C es una herramienta de desarrollo.
+The suite builds the C reference from source and generates its manifest; no
+historical binary recovery is required. New tests use neutral samples, not the
+developer's local profiles. The application uses Rust; the C reference is a
+development tool.
 
-## 10. Archivos de referencia
+## 10. Reference files
 
-En caso de discrepancia, la implementación y su ayuda son la referencia para la
-interfaz actual. Los resultados de una máquina o compilación no son promesas de comportamiento
-universal.
+When documentation differs, implementation and help define the current interface.
+One machine/build's results are not promises of universal behavior.
 
-- [CLI principal y menú](../scripts/compositor.py).
-- [Esquema, defaults, rutas y guardado TOML](../scripts/compositor_profile.py).
-- [Enumeración de dispositivos y comprobación del micrófono](../scripts/compositor_devices.py).
-- [Perfil de ejemplo](../examples/perfil.toml).
-- [Descripción técnica de CLI/escena](cli-escena.md).
-- [Script de preparación de GSR](../scripts/prepare-gsr.sh).
-- [Script de compilación del plugin](../scripts/build-rust-overlay.sh).
-- [Suite del plugin Rust](../scripts/check-rust-overlay.sh).
-- [Pruebas de perfiles y CLI](../tests/test_compositor.py).
-- [Pruebas de la CLI anterior](../tests/test_element_cli.py).
-- [Pruebas GL y avatar](../tests/rust_gl_host.py).
-- [Oráculo de GIF](../tests/check_rust_gif.py).
-- [Carga y límites de escenas](../rust/src/scene.rs).
-- [Detector de amplitud](../rust/src/microphone.rs).
-- [Contrato FFI/OpenGL](../rust/SAFETY.md).
-- [GSR: documentación del código fijado](../third_party/gpu-screen-recorder/README.md).
-- [GSR: opciones de construcción](../third_party/gpu-screen-recorder/meson_options.txt).
-- [GSR: manual de argumentos](../third_party/gpu-screen-recorder/gpu-screen-recorder.1).
-- [Estado y alcance de validación](estado.md).
+- [Main CLI and menu](../scripts/compositor.py).
+- [Schema, defaults, paths and TOML saving](../scripts/compositor_profile.py).
+- [Device enumeration and microphone probing](../scripts/compositor_devices.py).
+- [Sample profile](../examples/perfil.toml).
+- [Technical CLI/scene overview](cli-escena.md).
+- [GSR preparation script](../scripts/prepare-gsr.sh).
+- [Plugin build script](../scripts/build-rust-overlay.sh).
+- [Rust plugin suite](../scripts/check-rust-overlay.sh).
+- [Profile and CLI tests](../tests/test_compositor.py).
+- [Earlier CLI tests](../tests/test_element_cli.py).
+- [GL and avatar tests](../tests/rust_gl_host.py).
+- [GIF oracle](../tests/check_rust_gif.py).
+- [Scene loading and limits](../rust/src/scene.rs).
+- [Amplitude detector](../rust/src/microphone.rs).
+- [FFI/OpenGL contract](../rust/SAFETY.md).
+- [GSR pinned-source documentation](../third_party/gpu-screen-recorder/README.md).
+- [GSR build options](../third_party/gpu-screen-recorder/meson_options.txt).
+- [GSR argument manual](../third_party/gpu-screen-recorder/gpu-screen-recorder.1).
+- [Status and validation scope](estado.md).

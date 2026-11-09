@@ -1,48 +1,50 @@
-# Dirección técnica y siguientes etapas
+# Technical direction and next stages
 
-Estado actual: plugin, GIFs, avatar, capas y TUI bilingüe implementados. El usuario
-confirmó funcionamiento de la TUI y una grabación de 10 minutos en su laptop.
-El trabajo actual es el [paquete preliminar local](paquete-preliminar.md), sin
-streaming ni cambios al núcleo de GSR. El resto de este documento conserva el
-plan técnico y sus criterios de validación; no implica pruebas ya realizadas.
+Current status: plugin, GIFs, avatar, layers and bilingual TUI are implemented.
+The user confirmed the TUI and a 10-minute recording on their laptop. Current
+work is the [local preliminary package](paquete-preliminar.md), without streaming
+or GSR-core changes. The rest of this document preserves the technical plan and
+validation criteria; it does not imply that the proposed tests have been run.
 
+Priority: screen recording with good performance, stability and synchronized
+audio. GSR handles capture/audio/encoding; Rust composes and Python controls.
+Changing languages does not guarantee resource savings.
 
-Prioridad: grabar videojuegos y sesiones de desarrollo con buen rendimiento,
-estabilidad y audio sincronizado. GSR mantiene captura/audio/codificación; Rust
-compone y Python controla. Un cambio de lenguaje no garantiza ahorro de recursos.
+Target platform: Wayland, with COSMIC as the reference. No X11-only modes are
+being developed; this does not require removing upstream engine internals.
 
-Plataforma objetivo: Wayland, con COSMIC como referencia. No se desarrollan modos
-exclusivos de X11; eso no requiere retirar sus rutas internas del motor upstream.
+## Current foundation
 
-## Base actual
+The [TUI](tui.md) and [CLI](guia-cli.md) share TOML profiles and a recorder. The
+Rust plugin loads PNG/JPG/GIF, orders layers and switches idle/talking according
+to microphone level. Composition and behavior are separate without an ECS or
+custom framework. Files are preloaded with limits; screen frames are not decoded
+on the CPU.
 
-La [TUI](tui.md) y [CLI](guia-cli.md) comparten perfiles TOML y grabador. El plugin
-Rust carga PNG/JPG/GIF, ordena capas y alterna reposo/habla por nivel del micrófono.
-La composición y los comportamientos están separados sin ECS ni framework propio.
-Los archivos se precargan con límites; no se decodifican cuadros de pantalla en CPU.
+## Before distribution
 
-## Antes de distribuir
+1. Validate the TUI with real GSR and comparable long sessions.
+2. Choose the application's own name and mascot; geometric examples are not its mascot.
+3. Prepare a reproducible build from a tree without private profiles or assets.
+4. Design a joint package with a known GSR build, KMS helper and plugin, without
+   replacing system GSR or adding its GUI.
+5. Review dependencies, licenses and the compatibility matrix before publication.
 
-1. Validar el flujo TUI con GSR real y sesiones prolongadas comparables.
-2. Elegir nombre y mascota propios; los ejemplos geométricos no son la mascota.
-3. Preparar un build reproducible desde un árbol sin perfiles ni recursos privados.
-4. Diseñar el paquete conjunto con una compilación conocida de GSR, helper KMS y
-   plugin, sin reemplazar el GSR del sistema ni añadir su GUI.
-5. Revisar dependencias, licencias y matriz de compatibilidad antes de publicar.
+Each item requires a concrete task. The original plan predated packaging;
+Trama now has its name, artwork and a preliminary local package. See
+[current status](estado.md) for completed work and remaining validation.
 
-Cada punto requiere un encargo concreto. El empaquetado no está implementado.
+## GSR updates
 
-## Actualizaciones de GSR
+Pin a commit per delivery and inspect ABI, capture, rendering and audio changes
+before updating. Compare layouts, run automated tests and make real recordings
+before changing the distributed version. Do not promise compatibility with any
+executable bearing the same version or bypass hashes to accept it.
 
-Fijar un commit por entrega y comprobar cambios de ABI, captura, render y audio
-antes de actualizar. Comparar layouts, ejecutar pruebas automatizadas y grabar
-realmente antes de cambiar la versión distribuida. No prometer compatibilidad con
-cualquier ejecutable de igual número de versión ni saltarse hashes para admitirlo.
+## Future features
 
-## Funciones futuras
-
-Streaming requiere verificar los transportes y controles reales de GSR y de los
-destinos; las credenciales deben quedar fuera del repositorio y los logs. Grabar
-y emitir simultáneamente con una sola instancia no está validado. No se crea otro
-motor de captura por anticipado. Texto, control en vivo y múltiples escenas quedan
-para entregas posteriores basadas en necesidades y mediciones.
+Streaming requires checking actual GSR and destination transports/controls;
+credentials must stay outside the repository and logs. Recording and streaming
+simultaneously in one instance is unverified. Do not build another capture engine
+in advance. Text, live control and multiple scenes belong to later deliveries
+based on requirements and measurements.

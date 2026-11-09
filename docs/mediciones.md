@@ -1,12 +1,12 @@
-# Medición reproducible por CLI
+# Reproducible CLI measurement
 
-Herramientas de desarrollo; los resultados generados no forman parte del proyecto.
-Prepara la referencia C con `bash scripts/build-overlay.sh` para la comparación
-del prototipo. Para Rust/GIF, usa `scripts/measure-gif.py` con el mismo recurso.
+Development tools; generated results are not part of the project. Build the C
+reference with `bash scripts/build-overlay.sh` for prototype comparison. For
+Rust/GIF, use `scripts/measure-gif.py` with the same asset.
 
-## Ejecutar
+## Run
 
-Desde una terminal normal de COSMIC, sin sudo ni instalaciones adicionales:
+From a normal COSMIC terminal, without sudo or additional installations:
 
 ```sh
 cd "$HOME/project-gsr-compositor"
@@ -14,92 +14,87 @@ python3 scripts/measure.py --media examples/assets/idle.gif \
   --workload "Escritorio quieto, mismas ventanas"
 ```
 
-Mantén las mismas ventanas y no interactúes durante los aproximadamente 70 s:
-primero GSR solo, luego GSR con overlay. Cada prueba tiene 5 s de calentamiento
-excluidos del resumen y 30 s solicitados de medición. No abras OBS u otro grabador.
-Este primer escenario estático solo establece un caso básico; no representa juegos,
-reproducción de video ni un benchmark de fluidez. Para una carga dinámica habrá
-que reproducir la misma secuencia, desde el mismo punto, en cada prueba.
+Keep windows unchanged and do not interact for roughly 70 seconds: first GSR
+alone, then GSR with overlay. Each run has 5 seconds of warm-up excluded from the
+summary and a requested 30-second measurement. Do not open OBS or another recorder.
+This static scenario is only a baseline, not representative of games, video
+playback or smoothness. A dynamic workload needs the same sequence replayed
+from the same starting point in each run.
 
-Ambas grabaciones usan KMS (`screen`), H.264 por GPU sin fallback a CPU,
-30 FPS CFR, calidad `very_high` y sin audio. Solo la segunda carga el plugin.
-Se conserva la posición/ancho configurada con `GSR_OVERLAY_X/Y/WIDTH` y se registra.
-Un fallo interrumpe la comparación; no se presenta un resultado parcial como éxito.
-Ctrl+C detiene la captura y conserva lo ya recogido. El programa envía SIGINT a
-GSR al finalizar para guardar el MP4; si no termina en 15 s, fuerza el cierre y
-marca la prueba como incompleta.
+Both captures use KMS (`screen`), H.264 GPU without CPU fallback, 30 FPS CFR,
+`very_high` and no audio. Only the second loads the plugin. Configured
+`GSR_OVERLAY_X/Y/WIDTH` position/width is preserved and recorded. Failure stops
+the comparison; partial results are not presented as success. Ctrl+C stops capture
+and retains collected data. The tool sends SIGINT to GSR to finalize MP4; after
+15 seconds without exit it forces termination and marks the run incomplete.
 
-La carpeta impresa `build/measurements/<fecha-UTC-id>/` contiene:
+The printed `build/measurements/<UTC-date-id>/` folder contains:
 
-- `baseline.mp4`, `overlay.mp4`: videos, sin sobrescribir grabaciones anteriores.
-- `baseline.log`, `overlay.log`: salida completa de GSR, para verificar captura,
-  driver, codificador y posibles errores.
-- `*.jsonl`: muestras crudas, incluidas las de calentamiento, procesos y cobertura.
-- `*.csv`: muestras del periodo medido de CPU y memoria.
-- `summary.json`: medias ponderadas por duración de intervalo, máximos muestreados,
-  comandos, hashes del plugin/imagen, kernel, versión GSR y datos de FFprobe.
+- `baseline.mp4`, `overlay.mp4`: videos; previous captures are not overwritten.
+- `baseline.log`, `overlay.log`: full GSR output for capture, driver, encoder and errors.
+- `*.jsonl`: raw samples including warm-up, processes and coverage.
+- `*.csv`: CPU/memory samples for the measured period.
+- `summary.json`: interval-duration-weighted averages, sampled maxima, commands,
+  plugin/image hashes, kernel, GSR version and FFprobe data.
 
-El muestreo nominal es de 1 s. Un intervalo que cruza el fin del calentamiento
-se excluye entero, por lo que el tiempo resumido puede ser menor de 30 s. El
-tiempo real cubierto está en `sampled_seconds`, no se presupone exacto.
+Nominal sampling is 1 second. An interval crossing the warm-up boundary is fully
+excluded, so summarized time may be under 30 seconds. Actual coverage is
+`sampled_seconds`; it is not assumed exact.
 
-Para reducir sesgos de orden/temperatura, repetir más adelante invirtiendo el orden:
+To reduce ordering/temperature bias, repeat later in reverse order:
 
 ```sh
 python3 scripts/measure.py --media examples/assets/idle.gif \
   --workload "Escritorio quieto, mismas ventanas" --order overlay-first
 ```
 
-## Interpretar con cuidado
+## Interpret carefully
 
-- **CPU:** suma de utime+stime de los procesos observados, sin sumar tiempos de
-  hijos esperados para evitar duplicarlos. 100% equivale a un núcleo completo;
-  puede superar 100%. No es porcentaje de toda la CPU.
-- **Procesos:** se lanza GSR en sesión propia; se buscan procesos de esa sesión
-  y sus descendientes, conservando identidad PID+tiempo de creación para seguir
-  hijos que se separen. Los procesos que nacen y mueren entre muestras pueden
-  escapar al muestreo; también los que se separan antes de observarlos. Se
-  guardan nombres/PIDs y errores de acceso. No incluye servicios externos ya
-  existentes (COSMIC, servidor de audio), ni un contador del sistema completo.
-- **RSS:** suma de memoria residente del conjunto. Puede contar páginas
-  compartidas más de una vez. Sus máximos son los observados a 1 s, no un máximo
-  absoluto. MiB = 2^20 bytes.
-- **PSS:** reparte páginas compartidas entre procesos; solo se publica PSS total
-  cuando todos los procesos fueron legibles en todas las muestras. Un helper
-  con capabilities puede impedir leer `smaps_rollup`; en ese caso se deja `null`,
-  con subtotal legible y cobertura en los datos crudos. No interpretar ese subtotal
-  como memoria total, ni sumar RSS y PSS.
-- **GPU opcional:** se lee `/proc/<pid>/fdinfo` según la
-  [especificación oficial DRM](https://docs.kernel.org/gpu/drm-usage-stats.html).
-  Se deduplican descriptores compartidos por driver/dispositivo/client-id y se
-  retiene el máximo previo si un contador retrocede temporalmente. Se calcula
-  delta de nanosegundos ocupados / tiempo real por motor y dispositivo, sumando
-  los clientes observados. `core_percent` representa equivalentes de un motor;
-  puede superar 100% en grupos con varios motores y no se normaliza por capacidad.
-  No mide frecuencia, potencia, carga total de la GPU ni memoria GPU. Los nuevos
-  clientes necesitan dos observaciones; se indica cobertura en segundos. Si no
-  hay permisos o contadores, se deja sin dato, nunca se supone consumo cero.
-- **Observador:** su CPU está registrada por separado en `monitor_cpu_seconds`;
-  no se añade a GSR. El coste de lectura de `/proc` influye en el equipo y debe
-  considerarse al comparar. No es un muestreo sin impacto.
-- **Video:** FFprobe registra duración/resolución; solo en archivos de hasta
-  120 s intenta además contar frames por decodificación (timeout de 60 s).
-  El conteo puede fallar sin invalidar los metadatos; se informa por separado.
-  El número de frames CFR no demuestra ausencia de duplicados o tirones. Revisar
-  ambos videos y los logs; la prueba de 35 s tampoco acredita estabilidad prolongada.
+- **CPU:** summed utime+stime for observed processes, excluding waited-child
+  accounting to avoid double counting. 100% equals one full core and values can
+  exceed 100%. This is not a percentage of the whole CPU.
+- **Processes:** GSR starts in its own session. Session processes and descendants
+  are tracked with PID+start-time identity to follow detached children. Processes
+  born/dying between samples, or detached before observation, can escape sampling.
+  Names/PIDs and access errors are retained. Existing external services (COSMIC,
+  audio server) are not included; this is not whole-system accounting.
+- **RSS:** sum of resident memory, potentially counting shared pages repeatedly.
+  Maxima are observed at one-second samples, not absolute peaks. MiB = 2^20 bytes.
+- **PSS:** apportions shared pages among processes. Total PSS is published only
+  when every process was readable in every sample. Capabilities on a helper may
+  block `smaps_rollup`; total is then `null`, with readable subtotal and coverage
+  in raw data. Do not interpret that subtotal as total memory or add RSS to PSS.
+- **Optional GPU:** reads `/proc/<pid>/fdinfo` following the
+  [official DRM specification](https://docs.kernel.org/gpu/drm-usage-stats.html).
+  Shared descriptors are deduplicated by driver/device/client-id, retaining the
+  previous maximum if a counter temporarily decreases. Busy-nanosecond deltas
+  divided by elapsed time are calculated per engine/device across observed
+  clients. `core_percent` represents equivalent engine usage, can exceed 100%
+  for groups of engines and is not normalized by capacity. It does not measure
+  frequency, power, total GPU load or GPU memory. New clients need two observations;
+  coverage is reported in seconds. Missing permissions/counters mean unavailable,
+  never assumed zero usage.
+- **Observer:** its CPU is recorded separately as `monitor_cpu_seconds`, not added
+  to GSR. Reading `/proc` affects the machine and must be considered in comparisons;
+  observation is not free.
+- **Video:** FFprobe records duration/resolution. For files up to 120 seconds it
+  also attempts decoded frame counting with a 60-second timeout. Counting failure
+  does not invalidate metadata and is reported separately. CFR frame count does
+  not prove there were no duplicates/stutters. Review both videos and logs; a
+  35-second test does not establish long-term stability.
 
-No concluir ventajas frente a OBS ni cumplimiento de 150 MB con esta primera
-comparación. Antes de ampliar funcionalidades hay que revisar los datos reales,
-validar cobertura y diseñar una carga y configuración equivalentes para OBS.
+Do not infer an OBS advantage or achievement of 150 MB from this initial
+comparison. Before expanding functionality, review actual data, verify coverage
+and design an equivalent OBS workload/configuration.
 
-## Comprobaciones del instrumento
+## Instrument checks
 
 ```sh
 python3 tests/test_measure.py
 ```
 
-Siete pruebas: lectura rápida de videos largos, conservación de metadatos ante
-timeout de conteo, parseo de stat con nombres especiales, PID reutilizado, PSS ausente,
-contadores DRM regresivos e identidad de cliente; más una prueba integrada con
-un padre y un hijo que consume CPU, cierre SIGINT y video sintético analizado por
-FFprobe. No graban el escritorio ni prueban GPU; no producen resultados de GSR.
+Seven tests cover quick inspection of long videos, metadata retention when frame
+counting times out, stat parsing with unusual names, PID reuse, missing PSS,
+regressing DRM counters and client identity; an integrated test uses a CPU-consuming
+parent/child, SIGINT shutdown and synthetic video analyzed by FFprobe. They do
+not capture the desktop, test a GPU or produce GSR benchmark results.

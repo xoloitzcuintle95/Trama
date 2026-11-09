@@ -1,30 +1,30 @@
-# Identidad visual de Trama
+# Trama visual identity
 
-Recursos entregados por el usuario para identificar la aplicación:
+User-supplied resources identifying the application:
 
-- [icon.png](icon.png): icono de Trama.
-- [mascot.png](mascot.png): ilustración con reposo/habla de la mascota.
-- [hero.png](hero.png): ilustración del flujo audiovisual.
+- [icon.png](icon.png): Trama's icon.
+- [mascot.png](mascot.png): illustration of the mascot's idle/talking states.
+- [hero.png](hero.png): illustration of the audiovisual flow.
 
-Se conservaron los PNG originales sin recorte, conversión ni cambios de píxeles.
-La mascota es una ilustración, no dos GIF animados listos para el avatar. No se
-reemplazan los recursos de ningún perfil personal ni las muestras de prueba.
+Original PNGs are retained without cropping, conversion or pixel changes.
+The mascot is an illustration, not two animated GIFs ready for the avatar.
+Personal-profile resources and test samples are not replaced.
 
-El paquete de ejecución incluye solo el icono. Hero y mascota quedan en la
-presentación/documentación.
+The runtime package includes only the icon. Hero and mascot remain part of the
+presentation/documentation.
 
-## Licencia y procedencia
+## License and provenance
 
-Los tres archivos se distribuyen bajo **GPL-3.0-only**, igual que el código propio
-de Trama, por decisión explícita del usuario. El texto completo está en
-[LICENSE](../../LICENSE). Se permite su reutilización, modificación y distribución
-según esa licencia; no se establece una excepción de uso exclusivo para Trama.
+All three files are distributed under **GPL-3.0-only**, like Trama's own code,
+by the user's explicit decision. Full text: [LICENSE](../../LICENSE).
+Reuse, modification and distribution are allowed under that license; there is
+no Trama-exclusive usage exception.
 
-El usuario confirmó que estas imágenes se generaron con ChatGPT. No se afirma
-autoría humana ni exclusividad. Los PNG entregados son los originales conservados;
-no se dispone de un proyecto editable por capas.
+The user confirmed these images were generated with ChatGPT. No human authorship
+or exclusivity is claimed. The supplied PNGs are the retained originals; no
+editable layered project is available.
 
-Condiciones consultadas: [OpenAI, propiedad del contenido](https://openai.com/policies/terms-of-use/#content).
-Entre el usuario y OpenAI, las condiciones atribuyen el output al usuario en la
-medida permitida por la ley, y advierten que puede no ser único. La elección de
-GPL-3.0-only para estos archivos es del usuario, no una licencia impuesta por OpenAI.
+Terms consulted: [OpenAI, content ownership](https://openai.com/policies/terms-of-use/#content).
+Between the user and OpenAI, those terms assign output to the user to the extent
+permitted by law, and warn that it may not be unique. Choosing GPL-3.0-only for
+these files is the user's decision, not a license imposed by OpenAI.

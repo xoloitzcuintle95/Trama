@@ -1,97 +1,126 @@
-# Estado de Trama
+# Trama status
 
-## Implementado
+## Implemented
 
-- Aplicación terminal `trama`: Overview, Layers, Capture, Audio y Output;
-  edición por campo, selector de archivos, cuatro esquinas y pie contextual.
-- Español e inglés: automático según el sistema, inglés como alternativa,
-  selector `L`, preferencia independiente y override temporal `--lang`.
-- Plugin Rust 0.4.0 / ABI de plugin 4: PNG/JPG/GIF, capas y un avatar reactivo al
-  micrófono. Precarga acotada, tiempos/transparencia/bucle y posiciones existentes.
-- Perfiles TOML compatibles, carga/guardado, carpeta/nombre separados y grabación
-  directa sin TUI. Los datos personales se conservan fuera del proyecto.
-- GSR CLI 6.1.7, commit `f97d1e392816503282d20a0804c3ce3fd2943767`, motor de
-  captura, audio, codificación y escritura. No se usa su GUI ni se ha recortado
-  o traducido su núcleo. Wayland/COSMIC es el objetivo de soporte.
-- [Identidad visual](../assets/brand/README.md): icono, mascota y hero aportados
-  por el usuario. Se mantienen los originales; no sustituyen GIFs personales.
-- [Paquete preliminar local](paquete-preliminar.md): `.deb` amd64 con motor/helper
-  privados y manifiesto, fuentes separadas y avisos de dependencias. Construcción
-  sin sudo; no instala ni concede capacidades automáticamente.
+- `trama` terminal application: Overview, Layers, Capture, Audio and Output;
+  per-field editing, file picker, four-corner placement and contextual footer.
+- Spanish and English: system detection, English fallback, `L` selector,
+  separate preference and temporary `--lang` override.
+- Rust plugin 0.4.0 / plugin ABI 4: PNG/JPG/GIF, layers and one microphone-reactive
+  avatar. Bounded preload, existing timing/transparency/loop and placement rules.
+- Compatible TOML profiles, load/save, separate output folder/name and direct
+  recording without the TUI. Personal data stays outside the project.
+- GSR CLI 6.1.7, commit `f97d1e392816503282d20a0804c3ce3fd2943767`, handles
+  capture, audio, encoding and output. Its GUI is not used; its core has not been
+  reduced or translated. Wayland/COSMIC is the support target.
+- [Visual identity](../assets/brand/README.md): user-supplied icon, mascot and hero.
+  Originals are retained and do not replace personal GIFs.
+- [Local preliminary package](paquete-preliminar.md): amd64 `.deb` with private
+  engine/helper and manifest, separate sources and dependency notices. Built
+  without sudo; no automatic installation or capability grants.
 
-El comando anterior no se conserva. El estado del último perfil mantiene su
-ubicación histórica para evitar mover datos del usuario; el idioma se guarda
-por separado. No hay migración automática de perfiles, gráficos ni videos.
+The previous command name is not retained. Last-profile state keeps its historical
+location to avoid moving user data; language is stored separately. Profiles,
+graphics and videos are not automatically migrated.
 
-## Validación confirmada por el usuario
+## User-confirmed validation
 
-El usuario confirmó que la **TUI funciona y se ve bien en su laptop**, y que ya
-realizó **una grabación de 10 minutos**. Posteriormente confirmó que el `.deb`
-instalado también pudo grabar. En validaciones previas confirmó fluidez
-y coincidencia del sonido con el video. Son confirmaciones de uso en su entorno
-Pop!_OS/COSMIC, no resultados instrumentados ni validación en instalaciones limpias.
+The user confirmed that the **TUI works and looks good on their laptop**, and
+completed **a 10-minute recording**. They later confirmed recording with the
+installed `.deb` as well. Earlier checks confirmed smooth output and synchronized
+sound. These are reports from their Pop!_OS/COSMIC environment, not instrumented
+measurements or clean-install validation.
 
-No se realizó una prueba de 60 minutos. Esa duración era un criterio de validación
-propuesto para buscar crecimiento de memoria, desfase acumulativo o fallos poco
-frecuentes; no existe un cambio programado a los 10/15/40/60 minutos ni es un
-requisito técnico para usar el programa. Una sesión normal más larga puede
-aportar evidencia adicional antes de declarar una versión estable.
+No 60-minute test has been performed. That duration was a proposed criterion for
+finding memory growth, accumulated drift or infrequent failures. There is no
+scheduled behavior change at 10/15/40/60 minutes and no such technical minimum
+for using the program. A longer normal session can add evidence before declaring
+a stable release.
 
-## Validación automatizada y local
+## Automated and local validation
 
-- 37 pruebas de modelo/TUI/idiomas/PTY: perfiles, esquinas, edición, idioma,
-  guardado/carga, recuperación de sesión, cambios sin guardar, parada y restauración
-  ECHO/ICANON. Incluyen captura simulada de 30 segundos con MKV sintético.
-- 5 pruebas del paquete aprobadas: contenido permitido, propietarios/permisos, ausencia de
-  scripts privilegiados, motor privado tras extracción, ayuda bilingüe,
-  validador de recursos real, rechazo de helper alterado y fuentes/hashes/avisos.
-- Los hosts GL anteriores usan llvmpipe; el detector se prueba con PCM sintético.
-  Estas pruebas no certifican audio físico, GPU ni captura KMS en esta sesión.
-- La suite CLI ampliada mantiene dos comprobaciones pendientes por artefactos de
-  desarrollo ausentes: `media-dump` y la referencia C compilada/manifiesto. No se
-  alteró la referencia C ni se reconstruyó para preparar el runtime mínimo.
+- 37 model/TUI/language/PTY tests: profiles, corners, editing, language, load/save,
+  session recovery, unsaved changes, stopping and ECHO/ICANON restoration. Includes
+  a 30-second simulated recording with a synthetic MKV.
+- 5 package tests passed: allowed contents, ownership/permissions, no privileged
+  installation scripts, private engine after extraction, bilingual help, real
+  asset validation, tampered-helper rejection, sources/hashes/notices.
+- Earlier GL hosts use llvmpipe; the detector is tested with synthetic PCM. These
+  checks do not certify physical audio, GPU operation or KMS capture in this session.
+- Two extended CLI checks remain pending because development artifacts are
+  missing: `media-dump` and the compiled C reference/manifest. The C reference
+  was neither changed nor rebuilt to prepare the minimal runtime.
 
-La simulación APT local resolvió el `.deb` sin instalarlo y sin reemplazar el
-GSR del sistema. El snapshot de fuentes resolvió sus 43 crates vendorizados con
-Cargo offline; los archivos del runtime no contienen la ruta personal del build.
-El `.deb` ronda 1.5 MiB y el archivo separado de fuentes 5.3 MiB. Esto no mide
-consumo durante grabación. El resolver ELF emitió avisos sobre las diversiones
-usr-merge del host; la instalación en un entorno limpio sigue pendiente.
+The local APT simulation resolved the `.deb` without installing it or replacing
+system GSR. The source snapshot resolved its 43 vendored crates with Cargo
+offline; runtime files contain no personal build-directory path. The `.deb` is
+about 1.5 MiB and separate sources about 5.3 MiB. This is not recording-memory
+usage. The ELF resolver warned about host usr-merge diversions; clean-install
+validation is still pending.
 
-## Pendiente antes de publicar
+## Pending before publication
 
-- Probar el acceso desde el lanzador de aplicaciones COSMIC y la instalación en
-  un equipo/usuario limpio. La instalación y grabación en la laptop ya fueron
-  confirmadas por el usuario; no hace falta repetirlas solo para marcar esa casilla.
-- Código propio e identidad visual licenciados como GPL-3.0-only por decisión
-  del propietario, igual que GSR. El arte se generó con ChatGPT. Avisos y fuentes
-  se conservan; el paquete sigue siendo de evaluación local, sin publicación.
-- Medición equivalente con GSR solo y OBS, y prueba más prolongada de estabilidad.
-  No se declaran ventajas de recursos ni se garantiza la aspiración de 150 MB.
-- Validación en instalaciones limpias: dependencias APT, drivers, Polkit/KMS y
-  permisos. El paquete construido localmente no es un binario universal Linux.
+- Test the COSMIC application launcher and installation on a clean machine/user.
+  Installation and recording on the laptop are already user-confirmed and do
+  not need repeating solely to mark that item complete.
+- Own code and visual identity are GPL-3.0-only by the owner's decision, matching
+  GSR. Artwork was generated with ChatGPT. Notices and sources are retained;
+  the package remains for local evaluation and has not been published.
+- Equivalent measurements against GSR alone and OBS, plus longer stability testing.
+  No resource advantage or achievement of the 150 MB aspiration is claimed.
+- Clean installations: APT dependencies, drivers, Polkit/KMS and permissions.
+  The locally built package is not a universal Linux binary.
 
-No hay preview, edición en vivo, texto, timeline ni streaming. Las grabaciones,
-logs e informes personales no forman parte de las fuentes ni del paquete.
+There is no preview, live editing, text, timeline or streaming. Personal recordings,
+logs and reports are not part of the sources or package.
 
-Consulta [desarrollo](desarrollo.md), [TUI](tui.md),
-[arquitectura](cli-escena.md), [paquete](paquete-preliminar.md) y [plan](plan-rust.md).
+See the [beta checklist](checklist-beta.md), [development](desarrollo.md), [TUI](tui.md),
+[architecture](cli-escena.md), [package](paquete-preliminar.md) and [plan](plan-rust.md).
 
-## Aceptación sobre el runtime instalado
+## Installed-runtime acceptance
 
-Se ejecutaron **19 pruebas contra la versión instalada**: 8 de integridad,
-lanzador/modelo/decoder/errores y 11 de pseudoterminal. Todas pasaron, además de
-las 5 comprobaciones del paquete. Los módulos y binarios de `/usr/lib/trama` y el
-lanzador coinciden byte por byte con el `.deb` preliminar local.
+**19 tests ran against the installed version**: 8 integrity/launcher/model/decoder/
+error tests and 11 pseudoterminal tests. All passed, alongside the 5 package
+checks. Modules and binaries under `/usr/lib/trama` and the launcher match the
+local preliminary `.deb` byte for byte.
 
-El caso de primera ejecución abre sin argumento en una carpeta temporal vacía,
-con estado/configuración nuevos: pantalla, micrófono, recursos neutros, esquina,
-guardado y retorno. También pasan guardar/cargar, PNG/JPG/GIF, ocultar/reordenar/
-quitar capas, esquinas y los errores de GIF inexistente/inválido y micrófono
-explícito ausente. El recorrido de 30 segundos genera un MKV sintético y verifica
-parada, retorno y restauración de terminal. Se conservan los perfiles del usuario.
+The first-run case starts without arguments in an empty temporary folder, with
+fresh state/settings: display, microphone, neutral assets, corner, save and return.
+Load/save, PNG/JPG/GIF, hiding/reordering/removing layers, corners, missing/invalid
+GIFs and missing explicit microphones also pass. The 30-second flow creates a
+synthetic MKV and checks stopping, returning and terminal restoration. User
+profiles are preserved.
 
-No se cambió el runtime instalado ni se regeneró/reinstaló el paquete para estas
-pruebas. La pantalla, el audio y el capturador de las pruebas PTY son simulados;
-la prueba KMS/audio física del `.deb` sigue siendo la confirmación del usuario.
-Comandos y aislamiento: [desarrollo](desarrollo.md#probar-la-versión-instalada-sin-usar-perfiles-personales).
+The installed runtime was not changed and the package was not regenerated or
+reinstalled for these checks. PTY displays, audio and capture are simulated;
+physical KMS/audio validation of the `.deb` remains the user's confirmation.
+Commands and isolation: [development](desarrollo.md#test-the-installed-version-without-personal-profiles).
+
+## Beta documentation preparation
+
+README updated to separate `.deb` installation from source execution, explain
+requirements/output and distinguish real from simulated testing. The
+[checklist](checklist-beta.md) covers a second PC, clean installation, first
+physical run, permissions, audio/video, coexistence and release preparation.
+Mint and Ubuntu VM remain untested; a VM does not certify physical-GPU capture.
+The version remains `0.1.0~alpha1`. No package was rebuilt or published for this
+documentation update.
+
+## Experimental Flatpak
+
+The local x86_64 Flatpak has been built, exported and installed. The user confirmed
+TUI configuration and real recording on Pop!_OS/COSMIC with the revised launcher.
+Denying Polkit authorization recovers correctly; stopping with `x` finalizes the
+MKV and returns to the TUI. These are user-reported hardware results.
+
+A directed [authorization review](security-kms.md) replaced upstream's persistent
+capability-bearing proxy with an unprivileged launcher that asks Polkit to run
+only the fixed system-installed KMS helper. Seven local recipe tests pass. No
+privileged command was executed by the agent; helper process cleanup and host
+ownership/capability checks remain pending.
+
+A private test bundle and SHA-256 file were generated for second-machine testing.
+The bundle is approximately 2.4 MiB, excluding shared runtime downloads. The other
+PC is being tested; no additional distribution or GPU is certified yet. Complete
+release sources/notices, metadata and publication checks remain pending. See the
+[Flatpak procedure](flatpak.md). No public release has been made.

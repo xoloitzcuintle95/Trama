@@ -101,8 +101,12 @@ The assembler preserves tested engine/helper/plugin/checker hashes, adds notices
 and metadata, removes build-only libdrm files and exports to a separate local
 repository. The assembler did not install or upload anything. The user installed
 the `rebuild-verified` predecessor and confirmed real capture/stop/cancel checks.
-The newer `github` bundle has not been installed or capture-tested as a bundle;
-its runtime binaries are unchanged and only publication metadata was updated.
+The user has now installed the `github` bundle and confirmed its recording smoke
+test works. OMP verified installed commit
+`df30d61983d994380e3afbd9db0656b49481627dd2299811f30ee913ccb58ad2`,
+the original helper hash, root-owned protected deployment directories, mode 0755,
+no file capabilities and no remaining KMS server/proxy process. The user's
+recording was not opened, copied or included in Git or release assets.
 
 Source collection originally failed because the verifier searched for glibc's
 ref directly in `elements/bootstrap/glibc.bst`. The real SDK includes
@@ -208,18 +212,19 @@ Upload only the selected candidate's `.flatpak`, `-sources.tar.xz`,
 
 1. Source repository: https://github.com/xoloitzcuintle95/Trama. Real homepage,
    source-browser and issue URLs are included in the `github` candidate.
-   AppStream validation succeeds and the five release tests pass. The remaining
-   automatic host/capture checklist is not an automatic certification; reconcile
-   the recorded binary-hash validation and the latest bundle's untested status
-   before uploading a binary prerelease.
+   AppStream validation succeeds and the five release tests pass. The user
+   installed and confirmed the exact final bundle's recording smoke test.
+   OMP rechecked the deployment/helper and found no remaining KMS process.
+   The assembler's automatic host/capture reminder is satisfied by this separate
+   recorded validation; no artifact/checksum was edited to erase that reminder.
 2. Keep the legacy host proxy unless its owner explicitly requests cleanup:
    `$HOME/.local/share/gpu-screen-recorder/kms-server-proxy-2` is root-owned,
    mode 0755, with `CAP_SYS_ADMIN` and `CAP_SETUID`. The official GSR Flatpak is
    also installed and may use it. The known home/Flatpak-data/system/tmp paths
    were checked; no other matching copy was found. This proxy is outside the
    publication artifacts and Git, and was not executed, altered or deleted.
-3. Source publication is complete. After resolving the final-bundle checklist,
-   create a GitHub **prerelease** and attach only the four candidate files listed
+3. Source publication and final-bundle validation are complete. Create a GitHub
+   **prerelease** and attach only the four candidate files listed
    above. The user can do this at
    https://github.com/xoloitzcuintle95/Trama/releases/new with tag
    `v0.1.0-alpha1`, targeting `main`. GitHub's automatic source ZIP/tar does not

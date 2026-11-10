@@ -228,6 +228,11 @@ pass and all three artifact checksums pass. Engine/helper/plugin/checker hashes
 are unchanged from the user-tested predecessor. Only three regular source-archive
 members changed (AppStream XML, release assembler and build inventory); all
 dependency archives remain byte-identical to those privacy-reviewed.
-This newer bundle has not been installed or capture-tested as a bundle.
+The user installed this exact bundle and confirmed the recording smoke test
+works. OMP verified installed commit
+`df30d61983d994380e3afbd9db0656b49481627dd2299811f30ee913ccb58ad2`,
+the unchanged helper hash, protected root-owned deployment, mode 0755, no file
+capabilities and no remaining KMS server/proxy process. The recording remains
+private; neither it nor its absolute local path was added to project artifacts.
 No history was reset or local data deleted. Binary release publication and
 website/Reddit actions remain separate; this is not a complete security/legal audit.

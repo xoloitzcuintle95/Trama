@@ -260,9 +260,13 @@ never upload an older candidate by mistake.
 The current URL-complete candidate is
 `build/releases/0.1.0-alpha1-github/`. It preserves all four tested runtime binary
 hashes, includes the verified helper sources/rebuild report, passes artifact
-checksums and has valid AppStream metadata. It has not been installed or tested
-as a new bundle. Source publication to the GitHub repository does not upload any
-Flatpak release asset; the release files must be attached separately.
+checksums and has valid AppStream metadata. The user installed this exact bundle
+and confirmed its recording smoke test works; OMP rechecked the deployed commit,
+helper hash/permissions/capabilities and absence of remaining KMS processes.
+The assembler's host/capture reminder is reconciled with that separate evidence
+in the checkpoint, not removed by editing checksummed artifacts.
+Source publication to the GitHub repository does not upload any Flatpak release
+asset; the four release files must be attached separately.
 
 ## Collect the static helper's SDK sources
 

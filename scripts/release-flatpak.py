@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Assemble a local candidate from tested binaries; never install or publish."""
 import argparse
-import configparser
+import importlib.util
 import hashlib
-import io
 import json
 from pathlib import Path, PurePosixPath
 import re
@@ -11,6 +10,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parent.parent
 APP = 'io.github.xoloitzcuintle95.Trama'
@@ -96,7 +96,7 @@ def rust_notices(vendor, destination):
     return inventory
 
 
-def release(build, snapshot, output):
+def release(build, snapshot, output, helper_sources=None, helper_rebuild=None):
     build, snapshot, output = (p.resolve() for p in (build,snapshot,output))
     if output.exists():
         raise ValueError('Output already exists; choose a new directory')
@@ -149,6 +149,8 @@ def release(build, snapshot, output):
         for name in ('adapt-app-id.py','launch-kms.sh',f'{APP}.json'):
             copy(snapshot/name,sources/name)
         copy(ROOT/'scripts/release-flatpak.py',sources/'release-flatpak.py')
+        copy(ROOT/'scripts/prepare-helper-sources.py',sources/'prepare-helper-sources.py')
+        copy(ROOT/'packaging/flatpak/rebuild-helper.py',sources/'rebuild-helper.py')
         source_archives = sources/'upstream'
         source_archives.mkdir()
         notices = candidate/'files/share/licenses'
@@ -193,6 +195,8 @@ def release(build, snapshot, output):
         copy(ROOT/'packaging/flatpak/NOTICE',sources/'trama-source/packaging/flatpak/NOTICE')
         # Keep SDK provenance/notices for code linked into the static helper.
         sdk = Path(run(['flatpak','info','--show-location','org.freedesktop.Sdk//26.08']))/'files'
+        if run(['flatpak','info','--show-commit','org.freedesktop.Sdk//26.08'])!=provenance.get('sdk-commit'):
+            raise ValueError('Installed SDK differs from build provenance; do not substitute its notices or sources')
         copy(sdk/'manifest.json',sources/'SDK-SOURCE-MANIFEST.json')
         for component in ('glibc','gcc'):
             folder = sdk/'share/licenses/freedesktop-sdk'/component
@@ -210,11 +214,43 @@ def release(build, snapshot, output):
         copy('/usr/share/common-licenses/GPL-3',notices/'sdk/GPL-3')
         # Never imply a source URL list substitutes for static libc source obligations.
         blockers = ['Review/provide exact SDK glibc sources, SDK patch and static-helper relinking instructions before public distribution.',
-                    'Configure real public homepage/source/issue URLs in AppStream metadata; no placeholder URLs are supplied.',
                     'Check host helper ownership, capability state and process exit; retest final metadata/notices candidate.']
+        url_types = {item.get('type') for item in ET.parse(metadata).getroot().findall('url')
+                     if (item.text or '').strip()}
+        if not {'homepage','vcs-browser','bugtracker'} <= url_types:
+            blockers.append('Configure real public homepage/source/issue URLs in AppStream metadata; no placeholder URLs are supplied.')
+        helper_info=None
+        if helper_sources is not None:
+            spec=importlib.util.spec_from_file_location('helper_sources',ROOT/'scripts/prepare-helper-sources.py')
+            helper_module=importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(helper_module)
+            helper_info=helper_module.verify(helper_sources,provenance['sdk-commit'],sha(sdk/'manifest.json'))
+            helper_target=sources/'helper-sources'
+            helper_target.mkdir()
+            for name in ('HELPER-SOURCES.json','SDK-GLIBC-INPUT.json','SDK-SOURCE-MANIFEST.json','SDK-OSTREE.txt'):
+                copy(Path(helper_sources)/name,helper_target/name)
+            for item in helper_info['archives']:
+                copy(Path(helper_sources)/item['file'],helper_target/item['file'])
+            blockers[0]='Exact SDK/glibc sources included; verify the helper rebuild/relink procedure with the recorded SDK.'
+            if helper_rebuild is not None:
+                report=json.loads(helper_rebuild.read_text())
+                if (report.get('original_helper_sha256')!=manifest['gsr_helper_sha256']
+                    or report.get('sdk_manifest_sha256')!=sha(sdk/'manifest.json')
+                    or report.get('static_linkage_checked') is not True
+                    or report.get('rebuilt_helper_sha256')!=sha(helper_rebuild.parent/'gsr-kms-server')):
+                    raise ValueError('Helper rebuild report does not match the original SDK/artifact')
+                expected={i['archive']:i['sha256'] for i in inventory if i['module']=='libdrm-static'
+                          or i['module']=='gpu-screen-recorder' and i['source']['type']=='archive'}
+                if report.get('source_archives')!=expected:
+                    raise ValueError('Helper rebuild source archive mismatch')
+                copy(helper_rebuild,sources/'HELPER-REBUILD.json')
+                blockers.pop(0)
+        elif helper_rebuild is not None:
+            raise ValueError('A rebuild report requires --helper-sources')
         info = {'version':VERSION,'branch':'experimental','build':manifest,
                 'runtime_commit':provenance.get('runtime-commit'),'sdk_commit':provenance.get('sdk-commit'),
-                'modules':inventory,'rust':rust_inventory,'publication_blockers':blockers}
+                'modules':inventory,'rust':rust_inventory,'helper_sources':helper_info,
+                'publication_blockers':blockers}
         (sources/'BUILD-INFO.json').write_text(json.dumps(info,indent=2)+'\n')
         copy(ROOT/'packaging/flatpak/REBUILD.md',sources/'REBUILD.md')
         # Reference local archive copies during rebuild; no third-party download needed.
@@ -267,8 +303,10 @@ if __name__=='__main__':
     parser.add_argument('--build',type=Path,default=ROOT/'build/flatpak-app-v4')
     parser.add_argument('--snapshot',type=Path,default=ROOT/'build/flatpak-input-v4')
     parser.add_argument('--output',type=Path,default=ROOT/'build/releases/0.1.0-alpha1')
+    parser.add_argument('--helper-sources',type=Path,help='Verified SDK/glibc source bundle from prepare-helper-sources.py')
+    parser.add_argument('--helper-rebuild',type=Path,help='HELPER-REBUILD.json from the recorded SDK')
     args=parser.parse_args()
     try:
-        release(args.build,args.snapshot,args.output)
+        release(args.build,args.snapshot,args.output,args.helper_sources,args.helper_rebuild)
     except (OSError,ValueError,KeyError,subprocess.CalledProcessError) as error:
         parser.exit(1,f'Release preparation failed: {error}\n')

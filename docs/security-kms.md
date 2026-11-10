@@ -62,12 +62,34 @@ calling it. They never run Polkit, root commands or the real helper.
 
 The user rebuilt/updated the Flatpak and confirmed capture, recovery after
 authorization denial, and stopping with `x` with a saved MKV and TUI return.
-Pending on the laptop: verify system-owned deployment with no capabilities or
-setuid, check that KMS exits after stop/cancel and verify no new cached privileged
-copy appears. A helper crash or
-protocol flaw remains possible; this review does not prove their absence.
+On 2026-11-10, OMP inspected the system deployment on the laptop with an identity
+UID map: the helper and resolved parent directories were root-owned, with no
+group/other write access; the helper was mode 0755 and had no file capabilities.
+Its hash matched the tested original helper. No KMS server/proxy process was
+running at that idle snapshot; the later lifecycle check is recorded below.
+Absence of historical cached copies has not been established.
 
-Opening/configuring the TUI does not launch this helper. If an earlier build was
-used to start capture or run upstream setup, a privileged cached copy may already
-exist. Updating the app will not remove it automatically. Inspect narrowly and
-plan cleanup explicitly; do not delete GSR caches or personal directories blindly.
+Installing the final local candidate from OMP was denied by Flatpak
+(`InstallBundle not allowed for user`). The user then completed the authorized
+system update from their terminal. OMP confirmed deployment commit
+`96f5166d9cea1b8fb80d0695db6a8859cd9e401d1093f740b08fb26290b005a5`
+and repeated the helper hash, ownership, mode and capability checks successfully.
+The user confirmed the requested final-candidate capture/stop/cancel checks passed.
+The process observer sampled every 0.2 seconds into
+`build/kms-lifecycle-20261110T094651Z.jsonl`, recording two root-owned KMS servers
+and an exit event for each, with no unreadable entries in its snapshots. A final
+process check found no KMS server/proxy; the deployment, helper hash, ownership,
+mode 0755 and lack of file capabilities were rechecked successfully. The observer
+has exited. Its log does not identify UI actions or establish a Polkit denial;
+the user confirms that part of the test. Sampling cannot exclude shorter-lived
+processes. A helper crash or protocol flaw remains possible; this review does not
+prove their absence.
+
+The narrow historical-proxy inspection found
+`$HOME/.local/share/gpu-screen-recorder/kms-server-proxy-2`: root-owned, mode 0755,
+with `CAP_SYS_ADMIN` and `CAP_SETUID`. The official GSR Flatpak is also installed,
+so the file may still serve that application. No other copy was found at the
+known home, Flatpak-data, `/usr/bin` and `/tmp` locations. The file is outside
+Trama's release artifacts and Git; it was not run, altered or deleted. Its
+presence is not evidence that the revised Trama launcher created it. Do not
+remove it or its capabilities without the owner's explicit cleanup decision.

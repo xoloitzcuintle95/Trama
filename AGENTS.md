@@ -19,6 +19,7 @@ Support/validation target: Wayland/COSMIC. Do not expand X11-only modes; leave u
 - Consult on substantial objective changes or hard-to-reverse commitments. Do not commit, publish or install system software without authorization.
 
 ## Validation and continuity
+- Current continuation checkpoint: [docs/handoff.md](docs/handoff.md). Read it before resuming release work; inspect the real repository state as well.
 - Use real checks proportional to the change. Distinguish local checks from pending target-machine validation: Pop!_OS/COSMIC, Intel Iris Xe and 8 GB RAM.
 - Measure the process set and CPU, memory, GPU, smoothness and stability against GSR alone and OBS under equivalent conditions. Claim no advantages without measurements.
 - First achieve a small end-to-end flow, then expand. If resource advantage is not met, resolve that before adding features.

@@ -241,16 +241,91 @@ sha256sum -c trama-0.1.0-alpha1-x86_64.sha256
 ```
 
 The metadata describes `0.1.0-alpha1` as a development release. Code and art remain
-GPL-3.0-only; the new AppStream metadata document alone uses CC0-1.0. No public
-URLs are invented. `appstreamcli validate --no-net` reports a missing-homepage
-warning until a real public URL is supplied; this is not a completed Flathub
-submission. Rust notices, FFmpeg and its codec/network dependencies, libdrm,
-i965 and applicable SDK notices are retained with a source/notice inventory.
+GPL-3.0-only; the new AppStream metadata document alone uses CC0-1.0. The real
+homepage/source browser is https://github.com/xoloitzcuintle95/Trama and issues
+use that repository's issue tracker. The assembler records the public-URL blocker
+only when one of the homepage/source-browser/bugtracker URL types is missing.
+This is not a Flathub submission. Rust notices, FFmpeg and its codec/network
+dependencies, libdrm, i965 and applicable SDK notices remain in the inventory.
 
-**Publication remains blocked** on exact SDK glibc sources/patch and helper
-relinking review, real public metadata URLs, host-helper checks and validation of
-the final metadata/notices candidate. The source archive explicitly records the
-SDK-source gap rather than describing its SDK manifest as full corresponding
-source. No source archive or checksum alone proves license compliance. The
-assembler does not change the installed application or the earlier private test
-bundle; do not accidentally upload that earlier bundle as this candidate.
+The exact SDK/glibc collection and helper rebuild evidence have now been
+verified; pass both options documented below to include them. Independent host
+helper checks and user capture/stop/cancel validation are recorded in
+[the current checkpoint](handoff.md), not certified automatically by the
+assembler. Its remaining host-validation checklist must be reconciled with that
+evidence before publication. No source archive/checksum proves legal compliance.
+The assembler does not change the installed application or earlier bundles;
+never upload an older candidate by mistake.
+
+The current URL-complete candidate is
+`build/releases/0.1.0-alpha1-github/`. It preserves all four tested runtime binary
+hashes, includes the verified helper sources/rebuild report, passes artifact
+checksums and has valid AppStream metadata. It has not been installed or tested
+as a new bundle. Source publication to the GitHub repository does not upload any
+Flatpak release asset; the release files must be attached separately.
+
+## Collect the static helper's SDK sources
+
+The SDK source manifest identifies glibc by a Git-describe ref ending in an exact
+40-character commit. The SDK's signed OSTree commit subject identifies its
+BuildStream source revision. The collector checks the actual build SDK commit,
+fetches those source revisions (not `master`), and verifies that the SDK tree's
+glibc recipe/ref and patch agree with the installed manifest.
+
+From the project root, without sudo:
+
+```bash
+python3 scripts/prepare-helper-sources.py
+```
+
+This downloads source repositories into `build/helper-source-cache/` and writes
+verified archives/records to `build/helper-sources/`. It installs nothing and
+never runs the KMS helper. It refuses an existing output or a different SDK.
+If the server does not permit fetching the recorded commit, preserve the error;
+do not substitute the latest branch or silently use a different libc version.
+
+The user downloaded both exact source revisions. The initial verifier incorrectly
+looked for the glibc ref in the main element; the real SDK includes it from
+`elements/bootstrap/include/glibc-source.yml`. This was corrected against the
+actual downloaded tree. Cached exact commits are now reused without fetching,
+and lower-cost source compression avoids repeating unnecessary work. Seven tests
+cover matching, rejection and a real-cache/include regression check. The source
+collection is now verified; helper recompilation remains pending. The original
+candidate stays unchanged; a separate candidate includes the helper sources.
+
+After collection, create a new candidate including those sources:
+
+```bash
+python3 scripts/release-flatpak.py \
+  --helper-sources build/helper-sources \
+  --output build/releases/0.1.0-alpha1-with-helper-sources
+```
+
+The assembler revalidates the collection against the recorded SDK before adding
+it. It will still report a helper-rebuild check pending. Extract that candidate's
+source archive to a new owned directory and follow its REBUILD.md; the script
+runs inside `flatpak build --readonly`, builds libdrm/helper and writes a static
+linkage/rebuild report, without installing or executing the helper.
+
+For a final assembly after that check, pass the matching report as
+`--helper-rebuild /path/to/helper-rebuild/HELPER-REBUILD.json`, alongside
+`--helper-sources` and a new `--output`. The assembler checks the report, binary
+hash, SDK manifest and source archive hashes. The real public URLs and host/helper
+lifecycle checks are independent release items. Inside this agent environment,
+even `flatpak build ... true` fails to allocate an instance; this is not evidence
+of a failure on the user's installed runtime.
+
+
+The prepared source-only input for the laptop rebuild is `build/helper-rebuild-input`.
+It contains the original candidate's GSR/libdrm archives, manifest and provenance.
+From the checkout, the next check (no sudo, no install) is:
+
+```bash
+flatpak build --readonly --unshare=network --filesystem="$PWD" build/flatpak-app-v4 \
+  python3 "$PWD/packaging/flatpak/rebuild-helper.py" \
+  "$PWD/build/helper-rebuild-input" --output "$PWD/build/helper-rebuild-check"
+```
+
+Run from the project root. This writes only a new build output, never executes
+the rebuilt helper, and should finish with both helper hashes and a no-install
+message. Its report can be passed to the release assembler as described above.

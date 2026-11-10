@@ -1,7 +1,3 @@
-
-
-https://github.com/user-attachments/assets/e3b88843-8193-40eb-a926-7b2c099f359b
-
 # Trama
 
 Record your screen from the terminal, with overlays and a microphone-reactive
@@ -9,6 +5,10 @@ avatar. Trama uses **GPU Screen Recorder** for screen capture, audio recording
 and GPU video encoding.
 
 ![Trama: screen capture, audio and overlays in one recording](assets/brand/hero.png)
+
+**TUI tour**
+
+https://github.com/user-attachments/assets/e3b88843-8193-40eb-a926-7b2c099f359b
 
 **Early release.** Tested on Pop!_OS 24.04 with COSMIC/Wayland and Intel Iris Xe.
 Other hardware and distributions are not yet validated. GPU H.264 encoding is

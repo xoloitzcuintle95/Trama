@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/e3b88843-8193-40eb-a926-7b2c099f359b
+
 # Trama
 
 Record your screen from the terminal, with overlays and a microphone-reactive

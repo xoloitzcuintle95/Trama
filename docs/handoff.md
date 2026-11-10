@@ -61,11 +61,16 @@ The user chose a new GitHub repository with the clean source and the existing
 rewrite history, delete local data or upload the entire working directory.
 The user created https://github.com/xoloitzcuintle95/Trama, verified public with
 issues enabled. `origin` now uses `git@github.com:xoloitzcuintle95/Trama.git`.
-HTTPS push authentication is unavailable, but a strict-host-key/batch-mode SSH
-push dry run succeeded using the existing authentication. Inspect `origin/main`
-to determine source-push status before retrying; source pushes do not upload
-release assets. GitHub CLI/API-token/browser-relay access for creating/uploading
-Releases remains unavailable. Do not ask the user to paste credentials into chat.
+The reviewed source was committed as `09fa993` and pushed to `main` over existing
+strict-host-key/batch-mode SSH authentication; the public README was read back
+successfully from GitHub. The 3 original commits were retained. HTTPS push
+authentication is unavailable; keep the working SSH remote. The final 13 staged
+files were checked for unexpected paths, personal identifiers and credentials;
+the commit uses the public alias/GitHub noreply identity.
+
+No Flatpak release asset has been uploaded. GitHub CLI/API-token/browser-relay
+access for creating/uploading Releases remains unavailable. Do not ask the user
+to paste credentials into chat.
 
 ## Artifacts and sources
 
@@ -213,9 +218,14 @@ Upload only the selected candidate's `.flatpak`, `-sources.tar.xz`,
    also installed and may use it. The known home/Flatpak-data/system/tmp paths
    were checked; no other matching copy was found. This proxy is outside the
    publication artifacts and Git, and was not executed, altered or deleted.
-3. Record the reviewed changes and push only through the authorized publication
-   route. Retain the reviewed history. Website and Reddit remain separate
-   publication actions; broad host permissions remain, not strong isolation.
+3. Source publication is complete. After resolving the final-bundle checklist,
+   create a GitHub **prerelease** and attach only the four candidate files listed
+   above. The user can do this at
+   https://github.com/xoloitzcuintle95/Trama/releases/new with tag
+   `v0.1.0-alpha1`, targeting `main`. GitHub's automatic source ZIP/tar does not
+   replace the companion `-sources.tar.xz` containing dependency/SDK sources.
+   Website/Reddit remain separate actions; broad host permissions remain,
+   not strong isolation.
 
 ## Tests and presentation
 

@@ -206,18 +206,21 @@ server starts and matching exits; no KMS server/proxy remained at the final
 check. Root ownership, protected parent directories, mode 0755, no file
 capabilities and the original helper hash were rechecked successfully.
 All 7 helper-source, 8 recipe and 5 release tests passed in this session.
-Nothing was published. The final review found no user personal data/recordings
+Before publication, the final review found no user personal data/recordings
 in the candidate or intended Git contents/history; `hermes.md` is now explicitly
 ignored. All 12 nested source archives and the installed binaries/bytecode were
 included in the scan; dependency test fixtures and original attribution remain.
 The legacy privileged proxy was found outside these artifacts and preserved
 because the official GSR Flatpak is also installed.
 
-The user created https://github.com/xoloitzcuintle95/Trama and chose to retain
-the clean code's reviewed history, with download assets kept separate.
-`origin` uses SSH; an authenticated push dry run succeeded. Source-push status
-must be checked on the remote; GitHub release-upload authentication is unavailable
-in this environment.
+The reviewed source is published at https://github.com/xoloitzcuintle95/Trama,
+with commit `09fa993` on `main` and the 3 original commits preserved. The final
+13 staged files were privacy-checked and committed with the public alias/noreply
+identity. The public README was read back successfully. `origin` uses working
+SSH authentication. No Flatpak release asset has been uploaded; creating and
+uploading GitHub Releases still requires an authenticated route outside this
+environment. Keep binary/source/checksum assets together and mark the release
+experimental/prerelease.
 
 The latest local candidate is `build/releases/0.1.0-alpha1-github`, with the real
 homepage/source/issues URLs. AppStream validation succeeds, five release tests

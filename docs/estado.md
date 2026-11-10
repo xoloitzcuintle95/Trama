@@ -217,10 +217,13 @@ The reviewed source is published at https://github.com/xoloitzcuintle95/Trama,
 with commit `09fa993` on `main` and the 3 original commits preserved. The final
 13 staged files were privacy-checked and committed with the public alias/noreply
 identity. The public README was read back successfully. `origin` uses working
-SSH authentication. No Flatpak release asset has been uploaded; creating and
-uploading GitHub Releases still requires an authenticated route outside this
-environment. Keep binary/source/checksum assets together and mark the release
-experimental/prerelease.
+SSH authentication. The user published the public prerelease
+[v0.1.0-alpha1](https://github.com/xoloitzcuintle95/Trama/releases/tag/v0.1.0-alpha1)
+with exactly the four approved release assets. All four GitHub API SHA-256
+digests match the local reviewed files; the downloaded public checksum manifest
+matches its local counterpart. No recording/profile/local-note files were
+attached. Release API/browser authentication remains outside this environment;
+SSH source publication works.
 
 The latest local candidate is `build/releases/0.1.0-alpha1-github`, with the real
 homepage/source/issues URLs. AppStream validation succeeds, five release tests
@@ -234,5 +237,6 @@ works. OMP verified installed commit
 the unchanged helper hash, protected root-owned deployment, mode 0755, no file
 capabilities and no remaining KMS server/proxy process. The recording remains
 private; neither it nor its absolute local path was added to project artifacts.
-No history was reset or local data deleted. Binary release publication and
-website/Reddit actions remain separate; this is not a complete security/legal audit.
+No history was reset or local data deleted. The experimental binary/source
+release is public; website/Reddit publication remain separate actions. This is
+not a complete security/legal audit or evidence of a resource advantage.

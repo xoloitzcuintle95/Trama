@@ -1,10 +1,11 @@
-# Experimental local Flatpak
+# Experimental Flatpak
 
-Local ID: `io.github.xoloitzcuintle95.Trama`, branch `experimental`, x86_64.
+App ID: `io.github.xoloitzcuintle95.Trama`, branch `experimental`, x86_64.
 Target: Wayland, GPU H.264, SDR and MKV. No GSR GUI, X11 permission, streaming
-or network permission. Public distribution will be Flatpak-only; the native `.deb` recipe remains for
-development. The Rust compositor and TOML schema are unchanged. This is a local test build, not a public release. User-confirmed recording
-works on the Pop!_OS/COSMIC laptop; other systems remain unvalidated.
+or network permission. Public distribution is Flatpak-only; the native `.deb`
+recipe remains for development. The Rust compositor and TOML schema are unchanged.
+The public [0.1.0-alpha1 prerelease](https://github.com/xoloitzcuintle95/Trama/releases/tag/v0.1.0-alpha1)
+has user-confirmed recording on Pop!_OS/COSMIC; other systems remain unvalidated.
 
 ## Current authorization design
 
@@ -267,6 +268,10 @@ The assembler's host/capture reminder is reconciled with that separate evidence
 in the checkpoint, not removed by editing checksummed artifacts.
 Source publication to the GitHub repository does not upload any Flatpak release
 asset; the four release files must be attached separately.
+The user has published those four files in the prerelease linked above. Their
+GitHub API SHA-256 digests match the reviewed local candidate, and the public
+checksum manifest was downloaded and matched. GitHub's automatically generated
+source ZIP/tar is not a substitute for the companion dependency/SDK source archive.
 
 ## Collect the static helper's SDK sources
 

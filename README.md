@@ -23,16 +23,20 @@ the scope of this version.
 
 ## Getting started
 
-Flatpak is the planned public distribution format (Linux x86_64). The package
-includes the capture engine; no separate GSR installation is needed. The current
-build is experimental and has no public download or Flathub listing yet.
+Download the [experimental 0.1.0-alpha1 Flatpak](https://github.com/xoloitzcuintle95/Trama/releases/tag/v0.1.0-alpha1)
+for Linux x86_64. The capture engine is included; no separate GSR installation is
+needed. There is no Flathub listing.
 
-See [Flatpak installation and testing](docs/flatpak.md). Once installed system-wide,
-start it from a terminal:
+From the folder containing the downloaded `.flatpak`, install it system-wide
+and then launch Trama without sudo:
 
 ```bash
+sudo flatpak install --system --reinstall ./trama-0.1.0-alpha1-x86_64.flatpak
 flatpak run io.github.xoloitzcuintle95.Trama
 ```
+
+The release also includes corresponding sources, build inventory and checksums.
+See [Flatpak requirements, permissions and testing](docs/flatpak.md).
 
 The setup wizard lets you choose a display and microphone, load the avatar GIFs,
 place the avatar in a corner and record a 30-second test. You can cancel the

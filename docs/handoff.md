@@ -6,10 +6,10 @@ paragraphs where they describe a download or build as still pending.
 
 ## Current task
 
-Publish the reviewed source to the user's new GitHub repository, preserving the
-existing history, and prepare the experimental Flatpak release assets. Do not
-install system software or change the recording pipeline. Website/Reddit
-publication remain separate actions. No streaming, text, GUI or preview additions.
+The experimental Flatpak prerelease is published and its four assets verified:
+https://github.com/xoloitzcuintle95/Trama/releases/tag/v0.1.0-alpha1.
+The source repository and reviewed history are public. No feature work, system
+installation or website/Reddit publication is authorized by this checkpoint.
 
 Public distribution will be **Flatpak only**, x86_64. The `.deb` builder remains
 for development. Code/artwork are GPL-3.0-only; dependencies retain their licenses.
@@ -68,9 +68,14 @@ authentication is unavailable; keep the working SSH remote. The final 13 staged
 files were checked for unexpected paths, personal identifiers and credentials;
 the commit uses the public alias/GitHub noreply identity.
 
-No Flatpak release asset has been uploaded. GitHub CLI/API-token/browser-relay
-access for creating/uploading Releases remains unavailable. Do not ask the user
-to paste credentials into chat.
+The user published `v0.1.0-alpha1` as a public prerelease (`draft=false`,
+`prerelease=true`), with exactly the four expected release assets. All four
+GitHub API asset SHA-256 digests match the locally reviewed files; the public
+checksum file was downloaded and its three entries match the approved manifest.
+No recordings, profiles, local notes or build repository were attached.
+
+GitHub CLI/API-token/browser-relay access remains unavailable; SSH source pushes
+work. Do not ask the user to paste credentials into chat.
 
 ## Artifacts and sources
 
@@ -208,7 +213,7 @@ Upload only the selected candidate's `.flatpak`, `-sources.tar.xz`,
 `RELEASE-INFO.json` and `.sha256` as release assets. Do not upload its local
 `repo/`, build caches, recordings, profiles, lifecycle log or `hermes.md`.
 
-## Remaining release items
+## Publication closure and remaining scope
 
 1. Source repository: https://github.com/xoloitzcuintle95/Trama. Real homepage,
    source-browser and issue URLs are included in the `github` candidate.
@@ -223,14 +228,15 @@ Upload only the selected candidate's `.flatpak`, `-sources.tar.xz`,
    also installed and may use it. The known home/Flatpak-data/system/tmp paths
    were checked; no other matching copy was found. This proxy is outside the
    publication artifacts and Git, and was not executed, altered or deleted.
-3. Source publication and final-bundle validation are complete. Create a GitHub
-   **prerelease** and attach only the four candidate files listed
-   above. The user can do this at
-   https://github.com/xoloitzcuintle95/Trama/releases/new with tag
-   `v0.1.0-alpha1`, targeting `main`. GitHub's automatic source ZIP/tar does not
-   replace the companion `-sources.tar.xz` containing dependency/SDK sources.
-   Website/Reddit remain separate actions; broad host permissions remain,
-   not strong isolation.
+3. Binary prerelease publication is complete:
+   https://github.com/xoloitzcuintle95/Trama/releases/tag/v0.1.0-alpha1.
+   The four uploaded asset names, uploaded state and SHA-256 digests match the
+   approved candidate. GitHub's automatic source ZIP/tar does not replace the
+   companion `-sources.tar.xz` containing dependency/SDK sources. Do not edit
+   published assets or reset the release tag casually; any later replacement
+   requires an explicit release decision.
+   Website/Reddit remain separate actions requiring approval. No resource
+   superiority, universal compatibility or strong isolation claim is validated.
 
 ## Tests and presentation
 

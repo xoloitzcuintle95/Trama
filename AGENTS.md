@@ -1,9 +1,9 @@
 # Working on this project
 
 ## Goal
-Build a lightweight compositor on GPU Screen Recorder (GSR). Prioritize screen recording with good performance and synchronized audio on Linux. Current foundation: PNG/JPG/GIF layers, microphone-reactive avatar, TOML profiles and TUI. The application is Trama; its visual identity is in assets/brand/. Vision/stages: [docs/plan-rust.md](docs/plan-rust.md). Streaming remains out of scope; public distribution targets Flatpak ([docs/flatpak.md](docs/flatpak.md)); the native .deb recipe is development-only.
+Build a lightweight compositor on GPU Screen Recorder (GSR). Prioritize screen recording with good performance and synchronized audio on Linux. Current foundation: PNG/JPG/GIF layers, microphone-reactive avatar, TOML profiles and TUI. The application is Trama; its visual identity is in assets/brand/. Architecture: [docs/cli-escena.md](docs/cli-escena.md). Streaming remains out of scope; public distribution is Flatpak ([docs/flatpak.md](docs/flatpak.md)); the native .deb recipe is development-only.
 
-It must use fewer resources than OBS with an equivalent scene/quality. The previously mentioned 150 MB is an unmeasured aspiration, not a result or validated limit.
+It must use fewer resources than OBS with an equivalent scene/quality. Do not claim a resource advantage or a memory cap without equivalent measurements.
 
 Support/validation target: Wayland/COSMIC. Do not expand X11-only modes; leave unrelated upstream GSR code unchanged.
 
@@ -18,10 +18,10 @@ Support/validation target: Wayland/COSMIC. Do not expand X11-only modes; leave u
 - Inspect the project and preserve others' changes. Continue small authorized tasks and corrections without asking after every step.
 - Consult on substantial objective changes or hard-to-reverse commitments. Do not commit, publish or install system software without authorization.
 
-## Validation and continuity
-- Current continuation checkpoint: [docs/handoff.md](docs/handoff.md). Read it before resuming release work; inspect the real repository state as well.
+## Validation
+- Read the relevant public guides and inspect the real repository state before making changes. Keep internal handoffs, session diaries and personal examples out of docs/.
 - Use real checks proportional to the change. Distinguish local checks from pending target-machine validation: Pop!_OS/COSMIC, Intel Iris Xe and 8 GB RAM.
 - Measure the process set and CPU, memory, GPU, smoothness and stability against GSR alone and OBS under equivalent conditions. Claim no advantages without measurements.
 - First achieve a small end-to-end flow, then expand. If resource advantage is not met, resolve that before adding features.
-- Keep this file brief. Record continuation state and decisions in separate documentation when needed; reference only existing files.
+- Keep this file brief. Documentation should describe current supported workflows, not session history; reference only existing files.
 - Deliver results, validation, limitations and next step. Do not invent test results or compatibility.

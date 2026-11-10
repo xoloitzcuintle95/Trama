@@ -48,10 +48,19 @@ capture the screen. [Installation and authorization](docs/flatpak.md).
 
 ## Documentation
 
-- [TUI guide](docs/tui.md) and [CLI and profile reference](docs/guia-cli.md).
-- [Building and contributing from source](docs/desarrollo.md).
-- [Status, compatibility and testing](docs/estado.md).
-- [Experimental Flatpak](docs/flatpak.md) and [publication checklist](docs/checklist-beta.md).
+For users:
+
+- [Installation, updates and permissions](docs/flatpak.md).
+- [TUI guide](docs/tui.md).
+- [CLI and TOML profile reference](docs/guia-cli.md).
+- [Compatibility and troubleshooting](docs/compatibility.md).
+
+For contributors:
+
+- [Building and testing](docs/desarrollo.md).
+- [Architecture](docs/cli-escena.md).
+- [KMS helper security](docs/security-kms.md).
+- [Measuring performance](docs/mediciones.md).
 
 ## License
 

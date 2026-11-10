@@ -108,7 +108,7 @@ recurso. No añade operaciones unsafe ni lecturas de configuración en draw.
 La visibilidad también es inicial: oculto conserva caché y objetos GL, devuelve
 sin dibujar/subir textura y no solicita daño propio. Deinit conserva las mismas
 obligaciones de hilo/contexto incluso si nunca se dibujó. No es control en vivo.
-Ver [configuración y límites](../docs/configuracion-elemento.md).
+Ver [configuración y límites](../docs/desarrollo.md).
 
 PNG estático o GIF precargado; APNG/malformados rechazados. Para PNG en init: entrada comprimida ≤8 MiB,
 dimensiones 1..4096, RGBA ≤16 MiB, presupuesto del decoder 32 MiB, sin texto/ICC.

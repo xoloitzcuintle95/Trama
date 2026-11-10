@@ -82,7 +82,7 @@ def build(output):
         copy(ROOT/'assets/brand/icon.png',stage/'usr/share/pixmaps/trama.png')
         copy(ROOT/'packaging/trama.desktop',stage/'usr/share/applications/trama.desktop')
         doc=stage/'usr/share/doc/trama'
-        for name in ('README.md','docs/tui.md','docs/paquete-preliminar.md'):
+        for name in ('README.md','docs/tui.md','docs/desarrollo.md'):
             copy(ROOT/name,doc/Path(name).name)
         copy(ROOT/'packaging/copyright',doc/'copyright')
         copy(ROOT/'LICENSE',doc/'licenses/Trama-GPL-3.0.txt')

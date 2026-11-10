@@ -1,95 +1,150 @@
-# KMS authorization review
+# KMS authorization and security
 
-Scope: directed source review of the pinned GSR KMS server/client, downloaded
-upstream proxy r33 (`3b056c0`), and Trama's native/Flatpak packaging. This is not a
-complete security audit, exploit validation or guarantee of safety.
+Trama's Flatpak uses a privileged KMS helper for screen capture. This guide
+explains its current privilege and data boundaries; it is not a complete
+security audit or a guarantee that native capture code has no vulnerabilities.
+For installation, see the [Flatpak guide](flatpak.md).
 
-## Native package
+## What runs with privilege
 
-The `.deb` installs a private helper under `/usr/lib/trama/engine/`, with executable
-mode 0755, no setuid and no capability-granting maintainer scripts. GSR checks for
-`CAP_SYS_ADMIN` on the helper and otherwise uses `pkexec`. The user may separately
-set that capability; it is not required by the package. Whether it is present on
-a particular host must be checked there with `getcap`.
+The TUI, profile handling, image decoding, Rust compositor plugin, capture client
+and recording output run as your normal user. Do not launch Trama with sudo.
 
-GSR's helper takes two arguments: Unix socket path and DRM card path. It opens
-the card read-only, verifies that it is a primary DRM node, connects to the socket
-and serves GSR's capture protocol. It does not load the Rust plugin or decode user
-images. That narrows privileged work but leaves native DRM/protocol code as an
-attack surface. System ownership and non-writable installation directories are
-part of the trust boundary; this agent's mapped filesystem UIDs cannot certify
-host ownership.
+For KMS capture, GSR calls `kms-server-proxy` through `flatpak-spawn --host`.
+In Trama that name refers to an
+[unprivileged shell launcher](../packaging/flatpak/launch-kms.sh), not upstream's
+persistent privileged proxy. The launcher invokes host `/usr/bin/pkexec` with
+this fixed helper:
 
-## Initial upstream Flatpak proxy
+```text
+/var/lib/flatpak/app/io.github.xoloitzcuintle95.Trama/current/active/files/bin/gsr-kms-server
+```
 
-The reviewed source has the following confirmed behaviors:
+The helper runs privileged for the capture session. It accepts a Unix socket
+path and a primary DRM card path, opens the card read-only, verifies the primary
+node and serves GSR's capture protocol. It does not decode overlay images or load
+the Rust plugin. Native DRM, socket and capture-protocol code still forms a
+privileged attack surface; a read-only card open does not make that code risk-free.
 
-- It can create a root-owned cached executable with `CAP_SYS_ADMIN` and
-  `CAP_SETUID`, using a home path supplied as an argument.
-- It copies itself through a temporary file in user-controlled directories;
-  the copy routine uses `O_WRONLY | O_CREAT` without `O_EXCL`/`O_NOFOLLOW`.
-- It also supports setup and global-hotkey operations unused by Trama.
-- Its fallback cache may be `/usr/bin/kms-server-proxy-2`, not only the home
-  directory. Our earlier home-directory isolation did not cover that fallback.
+The fixed path requires a **system-wide installation at the standard location**.
+The helper and resolved installation directories must be root-owned and not
+writable by ordinary users. A user-only installation or custom Flatpak location
+is not an equivalent supported authorization setup. Do not copy the helper into
+a user-writable directory, replace it behind its integrity manifest or change
+its ownership to work around an error.
 
-These are reasons to avoid this persistence mechanism in Trama, not a claim of a
-proven privilege-escalation exploit. Root ownership of a file alone does not
-establish that every directory, link and update operation around it is safe.
-No exploitation or privileged execution was attempted.
+## Launcher boundary and authorization
 
-## Revised Flatpak launcher
+The launcher:
 
-Trama now packages a small unprivileged POSIX shell script under the same proxy
-filename expected by GSR. It validates argument count, absolute/socket path length
-and `/dev/dri/cardN` spelling, then executes the fixed host `/usr/bin/pkexec` with
-the fixed system-installed GSR helper and separately quoted arguments. The third
-GSR argument (home) is deliberately unused. There is no shell evaluation of
-arguments, selectable executable, cached proxy, chmod/chown/setcap operation or
-hotkey/setup interface. The upstream privileged helper itself is unchanged.
+- Requires the three arguments supplied by GSR, but deliberately ignores the
+  third argument, the home directory.
+- Requires an absolute socket path no longer than Linux's 107-character limit
+  and a DRM card path spelled `/dev/dri/cardN`, where `N` contains only digits.
+- Uses fixed absolute paths for `pkexec` and the helper, with the socket/card
+  arguments quoted separately. It does not evaluate them as shell code.
+- Does not offer a selectable executable, setup operation or global-hotkey
+  interface, and does not create privileged cached copies or run
+  `chmod`, `chown` or `setcap`.
 
-This trades persistent capabilities for session authorization. Polkit may cache
-approval according to host policy; the script does not promise a password prompt
-every time. The fixed path requires a system Flatpak installation whose files and
-parent directories are protected by the host. The broad Flatpak host-execution
-permission remains; this is not a tightly isolated sandbox.
+These checks constrain launcher behavior, not every input accepted by the
+privileged helper. Absolute socket-path validation alone does not establish
+socket ownership or make the capture protocol safe against every local attack.
+The helper is upstream GSR native code, not a new security isolation layer.
 
-## Tests and remaining checks
+Polkit decides whether authentication is required. Approval can be cached under
+host policy, so per-session helper execution does **not** promise a fresh password
+prompt for every recording. Denying authorization should return control to Trama.
+A missing authorization agent or broken policy should be diagnosed, not bypassed
+by running the entire application as root.
 
-Local tests substitute a harmless fake pkexec in a temporary script copy, check
-literal forwarding (including shell metacharacters), a fixed executable target,
-exit propagation, and rejection of malformed card/socket/count inputs before
-calling it. They never run Polkit, root commands or the real helper.
+Trama does not require persistent file capabilities or a setuid helper. Its native
+development packaging also installs the helper without granting those privileges;
+public runtime installation instructions apply to the Flatpak. Do not add
+`CAP_SYS_ADMIN` or `CAP_SETUID` as a normal installation step.
 
-The user rebuilt/updated the Flatpak and confirmed capture, recovery after
-authorization denial, and stopping with `x` with a saved MKV and TUI return.
-On 2026-11-10, OMP inspected the system deployment on the laptop with an identity
-UID map: the helper and resolved parent directories were root-owned, with no
-group/other write access; the helper was mode 0755 and had no file capabilities.
-Its hash matched the tested original helper. No KMS server/proxy process was
-running at that idle snapshot; the later lifecycle check is recorded below.
-Absence of historical cached copies has not been established.
+## Files, devices and sandbox limits
 
-Installing the final local candidate from OMP was denied by Flatpak
-(`InstallBundle not allowed for user`). The user then completed the authorized
-system update from their terminal. OMP confirmed deployment commit
-`96f5166d9cea1b8fb80d0695db6a8859cd9e401d1093f740b08fb26290b005a5`
-and repeated the helper hash, ownership, mode and capability checks successfully.
-The user confirmed the requested final-candidate capture/stop/cancel checks passed.
-The process observer sampled every 0.2 seconds into
-`build/kms-lifecycle-20261110T094651Z.jsonl`, recording two root-owned KMS servers
-and an exit event for each, with no unreadable entries in its snapshots. A final
-process check found no KMS server/proxy; the deployment, helper hash, ownership,
-mode 0755 and lack of file capabilities were rechecked successfully. The observer
-has exited. Its log does not identify UI actions or establish a Polkit denial;
-the user confirms that part of the test. Sampling cannot exclude shorter-lived
-processes. A helper crash or protocol flaw remains possible; this review does not
-prove their absence.
+The Flatpak grants broad access to host files and devices, PulseAudio-compatible
+audio, Wayland and IPC. It also permits talking to
+`org.freedesktop.Flatpak` for host execution. Consequently:
 
-The narrow historical-proxy inspection found
-`$HOME/.local/share/gpu-screen-recorder/kms-server-proxy-2`: root-owned, mode 0755,
-with `CAP_SYS_ADMIN` and `CAP_SETUID`. The official GSR Flatpak is also installed,
-so the file may still serve that application. No other copy was found at the
-known home, Flatpak-data, `/usr/bin` and `/tmp` locations. The file is outside
-Trama's release artifacts and Git; it was not run, altered or deleted. Its
-presence is not evidence that the revised Trama launcher created it. Do not
-remove it or its capabilities without the owner's explicit cleanup decision.
+- The application can access much of your personal filesystem, not just the
+  selected scene and output directory.
+- Capture and audio access can expose sensitive on-screen content and sound.
+- Host execution weakens the containment normally associated with Flatpak.
+- The absence of network or X11 permission in the manifest is not a guarantee
+  against access through host execution.
+
+**Do not treat this package as a strong sandbox.** Install only a bundle you trust
+and verify its published checksums. Checksums establish file consistency, not
+that the application or its dependencies are free from vulnerabilities.
+
+Profiles, assets and recordings remain user data. Output diagnostics can include
+absolute paths, device names and media metadata; inspect and redact them before
+sharing. The last-profile reference also contains a local path. See
+[compatibility and reporting](compatibility.md) for privacy guidance.
+
+## Read-only inspection
+
+These commands inspect the system installation without granting privileges or
+executing the helper:
+
+```bash
+flatpak info --system io.github.xoloitzcuintle95.Trama
+flatpak info --system --show-permissions io.github.xoloitzcuintle95.Trama
+helper=/var/lib/flatpak/app/io.github.xoloitzcuintle95.Trama/current/active/files/bin/gsr-kms-server
+readlink -f "$helper"
+namei -l "$helper"
+stat -Lc '%A %a %U:%G %n' "$helper"
+getcap "$(readlink -f "$helper")"
+```
+
+`namei` and `getcap` may need your distribution's utility packages. The expected
+helper mode is `0755`, owner/group `root:root`, without setuid/setgid or file
+capabilities; `getcap` normally prints nothing for it. Inspect the resolved parent
+directories too: they must not allow ordinary users to replace the executable.
+Symlinks are part of the deployment layout, so file ownership alone is not enough.
+If the path is missing or writable by ordinary users, stop and investigate the
+installation rather than authorizing capture.
+
+To inspect named capture processes without running them:
+
+```bash
+ps -C gsr-kms-server -C kms-server-proxy -o pid,user,args
+```
+
+No Trama KMS helper is expected to remain after capture has stopped. Another GSR
+application may also use these names; identify the application and process before
+taking action. One idle process listing cannot prove cleanup across every capture
+or rule out a process that exited between observations. Redact paths in process
+arguments before sharing output.
+
+## Existing GSR installations and historical caches
+
+Earlier upstream proxy designs can leave root-owned cached executables with
+`CAP_SYS_ADMIN` and `CAP_SETUID`, including a `kms-server-proxy-2` under
+`$HOME/.local/share/gpu-screen-recorder/` or a system location such as
+`/usr/bin/kms-server-proxy-2`. Trama's current launcher neither creates nor uses
+that persistence mechanism.
+
+A historical cache may belong to an official GPU Screen Recorder installation
+that still needs it. Its presence is not proof that current Trama created it.
+Do not execute unknown cached helpers, delete user caches or remove capabilities
+as part of a generic Trama install/uninstall procedure. Inspect ownership,
+capabilities and the owning application's documentation first; any cleanup needs
+the owner's informed decision.
+
+## Sources and helper modifications
+
+The companion source archive contains GSR, libdrm and the SDK sources/provenance
+needed for the static helper, together with component notices. Follow its
+`REBUILD.md` and the [packaging rebuild guide](../packaging/flatpak/REBUILD.md) for
+rebuilding/relinking, including deliberate SDK/library changes. Those procedures
+do not execute the helper or grant privileges. A modified helper changes its
+integrity hash: rebuild the application's integrity manifest rather than silently
+substituting a binary in an installed deployment.
+
+For checkout-based work, use the [developer guide](desarrollo.md). Successful
+compilation or matching checksums are separate from security, legal/source review
+and hardware capture validation.

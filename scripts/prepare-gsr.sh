@@ -8,7 +8,7 @@ if [[ ! -e "$src" ]]; then
 fi
 git -C "$src" rev-parse HEAD
 printf '%s\n' 'Revisa README.md, meson.build, meson_options.txt e install.sh antes de instalar.'
-command -v meson >/dev/null || { printf '%s\n' 'Falta meson (ver docs/estado.md).' >&2; exit 1; }
+command -v meson >/dev/null || { printf '%s\n' 'Falta meson (ver docs/desarrollo.md).' >&2; exit 1; }
 # Compilación local; sin portal ni descargas de FFmpeg estático.
 meson setup "$src/build" "$src" --buildtype=release --prefix=/usr/local \
     -Dffmpeg_static=false -Dportal=false -Dapp_audio=false \
